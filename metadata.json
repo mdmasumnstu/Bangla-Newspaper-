@@ -1,0 +1,7 @@
+{
+  "nnameame": "NewsHub BD",
+  "description": "All Bangladeshi newspapers and real-time news with top and latest feeds, search, category filters, and offline reading support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

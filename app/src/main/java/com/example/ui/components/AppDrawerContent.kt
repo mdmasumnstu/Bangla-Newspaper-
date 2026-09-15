@@ -1,0 +1,228 @@
+package com.example.ui.components
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SportsSoccer
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.R
+import com.example.data.model.NewspaperCategory
+import com.example.ui.BottomTab
+import com.example.ui.theme.EmeraldPrimary
+
+@Composable
+fun AppDrawerContent(
+    selectedTab: BottomTab,
+    onSelectTab: (BottomTab) -> Unit,
+    onSelectCategory: (NewspaperCategory) -> Unit,
+    onCloseDrawer: () -> Unit
+) {
+    ModalDrawerSheet(
+        modifier = Modifier.width(300.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                EmeraldPrimary,
+                                Color(0xFF0D5C3A)
+                            )
+                        )
+                    )
+                    .padding(20.dp)
+            ) {
+                Column {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White,
+                        modifier = Modifier.size(52.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_app_logo),
+                            contentDescription = "NewsHub Logo",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "NewsHub BD",
+                        color = Color.White,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "সব খবর, এক অ্যাপে",
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    Text(
+                        text = "20+ Top Bangladeshi Newspapers",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Main Tabs
+            NavigationDrawerItem(
+                icon = { Icon(Icons.Filled.Home, contentDescription = null) },
+                label = { Text("Home Feed", fontWeight = FontWeight.SemiBold) },
+                selected = selectedTab == BottomTab.HOME,
+                onClick = {
+                    onSelectTab(BottomTab.HOME)
+                    onCloseDrawer()
+                },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
+
+            NavigationDrawerItem(
+                icon = { Icon(Icons.Filled.Newspaper, contentDescription = null) },
+                label = { Text("All Newspaper Sources", fontWeight = FontWeight.SemiBold) },
+                selected = selectedTab == BottomTab.SOURCES,
+                onClick = {
+                    onSelectTab(BottomTab.SOURCES)
+                    onCloseDrawer()
+                },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
+
+            NavigationDrawerItem(
+                icon = { Icon(Icons.Filled.Favorite, contentDescription = null) },
+                label = { Text("Favorites & Offline Articles", fontWeight = FontWeight.SemiBold) },
+                selected = selectedTab == BottomTab.FAVORITES,
+                onClick = {
+                    onSelectTab(BottomTab.FAVORITES)
+                    onCloseDrawer()
+                },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Category Headers
+            Text(
+                text = "BROWSE CATEGORIES",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp)
+            )
+
+            val categories = listOf(
+                NewspaperCategory.BENGALI to Icons.Filled.Newspaper,
+                NewspaperCategory.ONLINE to Icons.Filled.Public,
+                NewspaperCategory.LOCAL to Icons.Filled.LocationOn,
+                NewspaperCategory.TV_NEWS to Icons.Filled.Tv,
+                NewspaperCategory.SPORTS to Icons.Filled.SportsSoccer,
+                NewspaperCategory.ENGLISH to Icons.Filled.Language,
+                NewspaperCategory.BUSINESS to Icons.Filled.Business
+            )
+
+            categories.forEach { (cat, icon) ->
+                NavigationDrawerItem(
+                    icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) },
+                    label = { Text(cat.displayName, fontSize = 14.sp) },
+                    selected = false,
+                    onClick = {
+                        onSelectCategory(cat)
+                        onCloseDrawer()
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Other Actions
+            NavigationDrawerItem(
+                icon = { Icon(Icons.Filled.Star, contentDescription = null) },
+                label = { Text("Rate Us") },
+                selected = selectedTab == BottomTab.RATE_US,
+                onClick = {
+                    onSelectTab(BottomTab.RATE_US)
+                    onCloseDrawer()
+                },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
+
+            NavigationDrawerItem(
+                icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                label = { Text("Settings") },
+                selected = selectedTab == BottomTab.SETTINGS,
+                onClick = {
+                    onSelectTab(BottomTab.SETTINGS)
+                    onCloseDrawer()
+                },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
