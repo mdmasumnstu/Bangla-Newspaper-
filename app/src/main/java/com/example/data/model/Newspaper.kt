@@ -9,5 +9,6 @@ data class Newspaper(
     val rssUrl: String? = null,
     val tagline: String,
     val primaryColorHex: Long = 0xFF0D6838,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val region: String? = null
 )

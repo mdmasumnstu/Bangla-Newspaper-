@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
@@ -58,7 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.NewspaperCategory
 import com.example.ui.NewsViewModel
 import com.example.ui.components.ArticleCard
-import com.example.ui.components.NewspaperCard
+import com.example.ui.components.CategoryChipRow
 import com.example.ui.components.NewspaperGridCard
 
 data class CategoryItem(
@@ -77,14 +78,21 @@ fun SearchScreen(
     onOpenCategory: (NewspaperCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
+    val isBn = strings == com.example.util.AppStrings.Bangla
     val searchQuery by viewModel.globalSearchQuery.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
-
-    val recentSearches = listOf("Prothom Alo", "Sports", "BBC", "Jobs", "Election", "Economy")
+    val searchCategoryFilter by viewModel.searchCategoryFilter.collectAsStateWithLifecycle()
+    val recentSearches by viewModel.recentSearches.collectAsStateWithLifecycle()
 
     val popularCategories = listOf(
         CategoryItem(NewspaperCategory.BENGALI, Icons.Filled.Newspaper, Color(0xFF10B981)),
-        CategoryItem(NewspaperCategory.ONLINE, Icons.Filled.Public, Color(0xFF3B82F6)),
+        CategoryItem(NewspaperCategory.JOBS, Icons.Filled.Business, Color(0xFF0D9488)),
+        CategoryItem(NewspaperCategory.RADIO, Icons.Filled.Tv, Color(0xFFE11D48)),
+        CategoryItem(NewspaperCategory.GOVERNMENT, Icons.Filled.Public, Color(0xFF059669)),
+        CategoryItem(NewspaperCategory.STOCK_MARKET, Icons.Filled.Business, Color(0xFF2563EB)),
+        CategoryItem(NewspaperCategory.MAGAZINE, Icons.Filled.Newspaper, Color(0xFF7C3AED)),
+        CategoryItem(NewspaperCategory.TECH, Icons.Filled.Public, Color(0xFFD97706)),
         CategoryItem(NewspaperCategory.LOCAL, Icons.Filled.LocationOn, Color(0xFFF97316)),
         CategoryItem(NewspaperCategory.TV_NEWS, Icons.Filled.Tv, Color(0xFFEF4444)),
         CategoryItem(NewspaperCategory.SPORTS, Icons.Filled.SportsSoccer, Color(0xFFEAB308)),
@@ -96,8 +104,13 @@ fun SearchScreen(
             title = {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { viewModel.setGlobalSearchQuery(it) },
-                    placeholder = { Text("Search newspapers or news...", fontSize = 14.sp) },
+                    onValueChange = {
+                        viewModel.setGlobalSearchQuery(it)
+                        if (it.trim().length >= 3) {
+                            viewModel.addRecentSearch(it)
+                        }
+                    },
+                    placeholder = { Text(strings.searchPlaceholder, fontSize = 14.sp) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Filled.Search,
@@ -108,7 +121,7 @@ fun SearchScreen(
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.setGlobalSearchQuery("") }) {
-                                Icon(imageVector = Icons.Filled.Clear, contentDescription = "Clear")
+                                Icon(imageVector = Icons.Filled.Clear, contentDescription = strings.clear)
                             }
                         }
                     },
@@ -140,39 +153,65 @@ fun SearchScreen(
             )
         )
 
+        // Instant Category Filter Chips in Search Screen
+        CategoryChipRow(
+            selectedCategory = searchCategoryFilter,
+            onCategorySelect = { viewModel.setSearchCategoryFilter(it) },
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+        )
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (searchQuery.isBlank()) {
+            if (searchQuery.isBlank() && searchCategoryFilter == NewspaperCategory.ALL) {
                 // Recent Searches
-                item {
-                    Column {
-                        Text(
-                            text = "Recent Searches",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            recentSearches.forEach { term ->
-                                AssistChip(
-                                    onClick = { viewModel.setGlobalSearchQuery(term) },
-                                    label = { Text(term) },
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                                    ),
-                                    modifier = Modifier.testTag("recent_search_chip_$term")
+                if (recentSearches.isNotEmpty()) {
+                    item {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (isBn) "সাম্প্রতিক অনুসন্ধান" else "Recent Searches",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
+                                androidx.compose.material3.TextButton(
+                                    onClick = { viewModel.clearRecentSearches() }
+                                ) {
+                                    Text(
+                                        text = if (isBn) "সব মুছুন" else "Clear All",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                recentSearches.forEach { term ->
+                                    AssistChip(
+                                        onClick = {
+                                            viewModel.setGlobalSearchQuery(term)
+                                            viewModel.addRecentSearch(term)
+                                        },
+                                        label = { Text(term) },
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = AssistChipDefaults.assistChipColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                        ),
+                                        modifier = Modifier.testTag("recent_search_chip_$term")
+                                    )
+                                }
                             }
                         }
                     }
@@ -181,7 +220,7 @@ fun SearchScreen(
                 // Popular Categories List
                 item {
                     Text(
-                        text = "Popular Categories",
+                        text = if (isBn) "জনপ্রিয় ক্যাটাগরি" else "Popular Categories",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -190,6 +229,7 @@ fun SearchScreen(
                 }
 
                 items(popularCategories, key = { it.category.name }) { item ->
+                    val catName = if (isBn) item.category.banglaName else item.category.displayName
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -225,9 +265,9 @@ fun SearchScreen(
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.width(14.dp))
+                                Spacer(modifier = Modifier.width(16.dp))
                                 Text(
-                                    text = item.category.displayName,
+                                    text = "${item.category.emoji} $catName",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -247,7 +287,7 @@ fun SearchScreen(
                 if (searchResults.matchingNewspapers.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Newspapers (${searchResults.matchingNewspapers.size})",
+                            text = "${strings.sources} (${searchResults.matchingNewspapers.size})",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -264,7 +304,10 @@ fun SearchScreen(
                                 Box(modifier = Modifier.weight(1f)) {
                                     NewspaperGridCard(
                                         newspaper = newspaper,
-                                        onClick = { onOpenNewspaper(newspaper.id) },
+                                        onClick = {
+                                            viewModel.addRecentSearch(newspaper.name)
+                                            onOpenNewspaper(newspaper.id)
+                                        },
                                         onToggleFavorite = {
                                             viewModel.toggleFavoriteNewspaper(newspaper.id, newspaper.isFavorite)
                                         }
@@ -282,7 +325,7 @@ fun SearchScreen(
                 if (searchResults.matchingArticles.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Articles (${searchResults.matchingArticles.size})",
+                            text = "${strings.latestNews} (${searchResults.matchingArticles.size})",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -293,7 +336,10 @@ fun SearchScreen(
                     items(searchResults.matchingArticles, key = { it.id }) { article ->
                         ArticleCard(
                             article = article,
-                            onClick = { onOpenArticle(article.id) },
+                            onClick = {
+                                viewModel.addRecentSearch(article.title.take(30))
+                                onOpenArticle(article.id)
+                            },
                             onToggleSave = { viewModel.toggleSaveArticle(article) }
                         )
                     }
@@ -308,13 +354,14 @@ fun SearchScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "No results found for \"$searchQuery\"",
+                                text = strings.noArticlesFound,
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Try searching for Prothom Alo, Sports, Economy or National.",
+                                text = if (isBn) "অনুসন্ধান পরামর্শ: প্রথম আলো, বিডি জবস, অর্থ মন্ত্রণালয়, রেডিও বা প্রযুক্তি"
+                                else "Try searching for Prothom Alo, BD Jobs, Ministry of Finance, Radio, or Tech.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )

@@ -600,11 +600,13 @@ fun NewspaperGridCard(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
                 ) {
                     Text(
-                        text = "পড়ুন ↗",
+                        text = if (newspaper.region != null) "${newspaper.region} • পড়ুন ↗" else "পড়ুন ↗",
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 9.sp,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
@@ -617,7 +619,8 @@ fun NewspaperGridCard(
 fun CategoryChipRow(
     selectedCategory: NewspaperCategory,
     onCategorySelect: (NewspaperCategory) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isBangla: Boolean = false
 ) {
     Row(
         modifier = modifier
@@ -627,12 +630,13 @@ fun CategoryChipRow(
     ) {
         NewspaperCategory.entries.forEach { category ->
             val isSelected = selectedCategory == category
+            val labelText = if (isBangla) category.banglaName else category.displayName
             FilterChip(
                 selected = isSelected,
                 onClick = { onCategorySelect(category) },
                 label = {
                     Text(
-                        text = category.displayName,
+                        text = "${category.emoji} $labelText",
                         fontSize = 13.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
@@ -652,8 +656,10 @@ fun CategoryChipRow(
 fun NewsHubBottomNavigation(
     selectedTab: BottomTab,
     onTabSelected: (BottomTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    strings: com.example.util.AppStrings = com.example.util.AppStrings.English
 ) {
+    val isBn = strings == com.example.util.AppStrings.Bangla
     NavigationBar(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -665,10 +671,10 @@ fun NewsHubBottomNavigation(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == BottomTab.HOME) Icons.Filled.Home else Icons.Outlined.Home,
-                    contentDescription = "Home"
+                    contentDescription = strings.homeFeed
                 )
             },
-            label = { Text("Home", fontSize = 11.sp) },
+            label = { Text(if (isBn) "হোম" else "Home", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -683,10 +689,10 @@ fun NewsHubBottomNavigation(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == BottomTab.SOURCES) Icons.Filled.ViewAgenda else Icons.Outlined.ViewAgenda,
-                    contentDescription = "Sources"
+                    contentDescription = strings.sources
                 )
             },
-            label = { Text("Sources", fontSize = 11.sp) },
+            label = { Text(if (isBn) "পত্রিকা ও সাইট" else "Sources", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -701,10 +707,10 @@ fun NewsHubBottomNavigation(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == BottomTab.FAVORITES) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = "Favorites"
+                    contentDescription = strings.favorites
                 )
             },
-            label = { Text("Favorites", fontSize = 11.sp) },
+            label = { Text(if (isBn) "সংরক্ষিত" else "Favorites", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -719,10 +725,10 @@ fun NewsHubBottomNavigation(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == BottomTab.RATE_US) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                    contentDescription = "Rate Us"
+                    contentDescription = strings.rateUs
                 )
             },
-            label = { Text("Rate Us", fontSize = 11.sp) },
+            label = { Text(if (isBn) "রেটিং" else "Rate Us", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -737,10 +743,10 @@ fun NewsHubBottomNavigation(
             icon = {
                 Icon(
                     imageVector = if (selectedTab == BottomTab.SETTINGS) Icons.Filled.Settings else Icons.Outlined.Settings,
-                    contentDescription = "Settings"
+                    contentDescription = strings.settings
                 )
             },
-            label = { Text("Settings", fontSize = 11.sp) },
+            label = { Text(if (isBn) "সেটিংস" else "Settings", fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = MaterialTheme.colorScheme.primary,
                 selectedTextColor = MaterialTheme.colorScheme.primary,

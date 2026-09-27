@@ -1216,8 +1216,287 @@ object NewspaperDataSource {
             rssUrl = null,
             tagline = "চীন আন্তর্জাতিক বেতার বাংলা বিভাগ",
             primaryColorHex = 0xFFC026D3
+        ),
+
+        // ==================== 📺 TV NEWS & BROADCAST CHANNELS (27) ====================
+        // --- 1. News TV Channels ---
+        Newspaper(
+            id = "somoy_tv",
+            name = "Somoy TV",
+            banglaName = "সময় টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.somoynews.tv",
+            rssUrl = null,
+            tagline = "সব সময় সব খবরের সাথে",
+            primaryColorHex = 0xFFDC2626
+        ),
+        Newspaper(
+            id = "jamuna_tv",
+            name = "Jamuna TV",
+            banglaName = "যমুনা টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.jamuna.tv",
+            rssUrl = null,
+            tagline = "২৪ ঘণ্টার খবরের সঙ্গী",
+            primaryColorHex = 0xFFB91C1C
+        ),
+        Newspaper(
+            id = "independent_tv",
+            name = "Independent TV",
+            banglaName = "ইনডিপেনডেন্ট টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.itvbd.com",
+            rssUrl = null,
+            tagline = "স্পষ্ট ও নিরপেক্ষ সংবাদ",
+            primaryColorHex = 0xFF2563EB
+        ),
+        Newspaper(
+            id = "channel_24",
+            name = "Channel 24",
+            banglaName = "চ্যানেল ২৪",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.channel24bd.tv",
+            rssUrl = null,
+            tagline = "২৪ ঘণ্টার সংবাদ চ্যানেল",
+            primaryColorHex = 0xFFEA580C
+        ),
+        Newspaper(
+            id = "ekattor_tv",
+            name = "Ekattor TV",
+            banglaName = "একাত্তর টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://ekattor.tv",
+            rssUrl = null,
+            tagline = "সংবাদ নয়, সত্য প্রকাশে একাত্তর",
+            primaryColorHex = 0xFF047857
+        ),
+        Newspaper(
+            id = "atn_news",
+            name = "ATN News",
+            banglaName = "এটিএন নিউজ",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.atnnewstv.com",
+            rssUrl = null,
+            tagline = "প্রথম ২৪ ঘণ্টার সংবাদ চ্যানেল",
+            primaryColorHex = 0xFF1D4ED8
+        ),
+        Newspaper(
+            id = "dbc_news",
+            name = "DBC News",
+            banglaName = "ডিবিসি নিউজ",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://dbcnews.tv",
+            rssUrl = null,
+            tagline = "নির্ভীক সংবাদের প্রতিচ্ছবি",
+            primaryColorHex = 0xFFBE185D
+        ),
+        Newspaper(
+            id = "news24_tv",
+            name = "NEWS24",
+            banglaName = "নিউজ ২৪",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.news24bd.tv",
+            rssUrl = null,
+            tagline = "সত্যের সন্ধানে সার্বক্ষণিক",
+            primaryColorHex = 0xFFB45309
+        ),
+        Newspaper(
+            id = "ekhon_tv",
+            name = "Ekhon TV",
+            banglaName = "এখন টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://ekhon.tv",
+            rssUrl = null,
+            tagline = "ব্যবসা ও অর্থনীতির ২৪ ঘণ্টার সংবাদ",
+            primaryColorHex = 0xFF0D9488
+        ),
+        Newspaper(
+            id = "btv_news",
+            name = "BTV News",
+            banglaName = "বিটিভি নিউজ",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://btv.gov.bd",
+            rssUrl = null,
+            tagline = "বাংলাদেশ টেলিভিশনের সার্বক্ষণিক সংবাদ",
+            primaryColorHex = 0xFF15803D
+        ),
+
+        // --- 2. General Entertainment TV Channels ---
+        Newspaper(
+            id = "channel_i",
+            name = "Channel i",
+            banglaName = "চ্যানেল আই",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.channelionline.com",
+            rssUrl = null,
+            tagline = "হৃদয়ে বাংলাদেশ",
+            primaryColorHex = 0xFF16A34A
+        ),
+        Newspaper(
+            id = "atn_bangla",
+            name = "ATN Bangla",
+            banglaName = "এটিএন বাংলা",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.atnbangla.tv",
+            rssUrl = null,
+            tagline = "অবিরাম বাংলার মুখ",
+            primaryColorHex = 0xFF1E40AF
+        ),
+        Newspaper(
+            id = "ntv_bd",
+            name = "NTV",
+            banglaName = "এনটিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.ntvbd.com",
+            rssUrl = null,
+            tagline = "সময়ের সাথে আগামীর পথে",
+            primaryColorHex = 0xFF0284C7
+        ),
+        Newspaper(
+            id = "rtv_online",
+            name = "RTV",
+            banglaName = "আরটিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://rtvonline.com",
+            rssUrl = null,
+            tagline = "আজ এবং আগামী",
+            primaryColorHex = 0xFFDC2626
+        ),
+        Newspaper(
+            id = "bangla_vision",
+            name = "Bangla Vision",
+            banglaName = "বাংলাভিশন",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.bvnews24.com",
+            rssUrl = null,
+            tagline = "দৃষ্টি জুড়ে দেশ",
+            primaryColorHex = 0xFF7C3AED
+        ),
+        Newspaper(
+            id = "ekushey_tv",
+            name = "Ekushey Television",
+            banglaName = "একুশে টেলিভিশন",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.ekushey-tv.com",
+            rssUrl = null,
+            tagline = "পরিবর্তনে অঙ্গীকারবদ্ধ",
+            primaryColorHex = 0xFFB91C1C
+        ),
+        Newspaper(
+            id = "boishakhi_tv",
+            name = "Boishakhi TV",
+            banglaName = "বৈশাখী টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.boishakhionline.com",
+            rssUrl = null,
+            tagline = "বাঙালির প্রাণের উৎসব",
+            primaryColorHex = 0xFFEA580C
+        ),
+        Newspaper(
+            id = "maasranga_tv",
+            name = "Maasranga TV",
+            banglaName = "মাছরাঙা টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://maasranga.tv",
+            rssUrl = null,
+            tagline = "রঙে রঙে রঙিন জীবন",
+            primaryColorHex = 0xFF059669
+        ),
+        Newspaper(
+            id = "desh_tv",
+            name = "Desh TV",
+            banglaName = "দেশ টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.desh.tv",
+            rssUrl = null,
+            tagline = "সবার জন্য দেশ",
+            primaryColorHex = 0xFF0284C7
+        ),
+        Newspaper(
+            id = "my_tv",
+            name = "My TV",
+            banglaName = "মাই টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://mytvbd.tv",
+            rssUrl = null,
+            tagline = "আমার টিভি মাই টিভি",
+            primaryColorHex = 0xFF9333EA
+        ),
+        Newspaper(
+            id = "satv_bd",
+            name = "SATV",
+            banglaName = "এসএটিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.satv.tv",
+            rssUrl = null,
+            tagline = "সাউথ এশিয়ান টেলিভিশন",
+            primaryColorHex = 0xFFE11D48
+        ),
+        Newspaper(
+            id = "deepto_tv",
+            name = "Deepto TV",
+            banglaName = "দীপ্ত টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.deepto.tv",
+            rssUrl = null,
+            tagline = "আলোয় আলোয় দীপ্ত",
+            primaryColorHex = 0xFFF59E0B
+        ),
+        Newspaper(
+            id = "btv_national",
+            name = "BTV",
+            banglaName = "বাংলাদেশ টেলিভিশন (বিটিভি)",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://btv.gov.bd",
+            rssUrl = null,
+            tagline = "জাতীয় সম্প্রচার মাধ্যম",
+            primaryColorHex = 0xFF15803D
+        ),
+
+        // --- 3. Sports & Music TV Channels ---
+        Newspaper(
+            id = "gazi_tv",
+            name = "Gazi TV (GTV)",
+            banglaName = "গাজী টিভি (জিটিভি)",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.gazitv.com",
+            rssUrl = null,
+            tagline = "লাইভ খেলা ও বিনোদন",
+            primaryColorHex = 0xFFDC2626
+        ),
+        Newspaper(
+            id = "t_sports_tv",
+            name = "T Sports",
+            banglaName = "টি স্পোর্টস",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://tsports.com",
+            rssUrl = null,
+            tagline = "দেশের একমাত্র পূর্ণাঙ্গ স্পোর্টস চ্যানেল",
+            primaryColorHex = 0xFFDC2626
+        ),
+        Newspaper(
+            id = "gaan_bangla",
+            name = "Gaan Bangla",
+            banglaName = "গান বাংলা",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://gaanbangla.tv",
+            rssUrl = null,
+            tagline = "মিউজিক ও সংস্কৃতির প্রথম চ্যানেল",
+            primaryColorHex = 0xFF9333EA
+        ),
+
+        // --- 4. International Bengali TV Channels ---
+        Newspaper(
+            id = "channel_s_uk",
+            name = "Channel S UK",
+            banglaName = "চ্যানেল এস ইউকে",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://chsuk.tv",
+            rssUrl = null,
+            tagline = "ভয়েস অব দ্য ব্রিটিশ বাংলাদেশি",
+            primaryColorHex = 0xFFBE185D
         )
-    )
+    ) + LocalNewspaperDataSource.localNewspapers + ExtraSourcesDataSource.extraSources
 
     fun getById(id: String): Newspaper? = allNewspapers.find { it.id == id }
 

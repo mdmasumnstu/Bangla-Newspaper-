@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Newspaper
 import androidx.compose.material.icons.filled.Public
@@ -58,7 +61,8 @@ fun AppDrawerContent(
     selectedTab: BottomTab,
     onSelectTab: (BottomTab) -> Unit,
     onSelectCategory: (NewspaperCategory) -> Unit,
-    onCloseDrawer: () -> Unit
+    onCloseDrawer: () -> Unit,
+    strings: com.example.util.AppStrings = com.example.util.AppStrings.English
 ) {
     ModalDrawerSheet(
         modifier = Modifier.width(300.dp)
@@ -101,7 +105,7 @@ fun AppDrawerContent(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "NewsHub BD",
+                        text = strings.appName,
                         color = Color.White,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
@@ -115,7 +119,7 @@ fun AppDrawerContent(
                     )
 
                     Text(
-                        text = "20+ Top Bangladeshi Newspapers",
+                        text = if (strings == com.example.util.AppStrings.Bangla) "৪০০+ পত্রিকা, রেডিও ও সরকারি বাতায়ন" else "400+ Bangladeshi Media, Portals & Radio",
                         color = Color.White.copy(alpha = 0.7f),
                         fontSize = 11.sp,
                         modifier = Modifier.padding(top = 2.dp)
@@ -128,7 +132,7 @@ fun AppDrawerContent(
             // Main Tabs
             NavigationDrawerItem(
                 icon = { Icon(Icons.Filled.Home, contentDescription = null) },
-                label = { Text("Home Feed", fontWeight = FontWeight.SemiBold) },
+                label = { Text(strings.homeFeed, fontWeight = FontWeight.SemiBold) },
                 selected = selectedTab == BottomTab.HOME,
                 onClick = {
                     onSelectTab(BottomTab.HOME)
@@ -139,7 +143,7 @@ fun AppDrawerContent(
 
             NavigationDrawerItem(
                 icon = { Icon(Icons.Filled.Newspaper, contentDescription = null) },
-                label = { Text("All Newspaper Sources", fontWeight = FontWeight.SemiBold) },
+                label = { Text(strings.sources, fontWeight = FontWeight.SemiBold) },
                 selected = selectedTab == BottomTab.SOURCES,
                 onClick = {
                     onSelectTab(BottomTab.SOURCES)
@@ -149,8 +153,39 @@ fun AppDrawerContent(
             )
 
             NavigationDrawerItem(
+                icon = { Icon(Icons.Filled.LiveTv, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                label = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(strings.tvNews, fontWeight = FontWeight.SemiBold)
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                text = "27",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                },
+                selected = false,
+                onClick = {
+                    onSelectCategory(NewspaperCategory.TV_NEWS)
+                    onCloseDrawer()
+                },
+                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+            )
+
+            NavigationDrawerItem(
                 icon = { Icon(Icons.Filled.Favorite, contentDescription = null) },
-                label = { Text("Favorites & Offline Articles", fontWeight = FontWeight.SemiBold) },
+                label = { Text(strings.favorites, fontWeight = FontWeight.SemiBold) },
                 selected = selectedTab == BottomTab.FAVORITES,
                 onClick = {
                     onSelectTab(BottomTab.FAVORITES)
@@ -165,7 +200,7 @@ fun AppDrawerContent(
 
             // Category Headers
             Text(
-                text = "BROWSE CATEGORIES",
+                text = strings.browseCategories,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
@@ -176,16 +211,22 @@ fun AppDrawerContent(
                 NewspaperCategory.BENGALI to Icons.Filled.Newspaper,
                 NewspaperCategory.ONLINE to Icons.Filled.Public,
                 NewspaperCategory.LOCAL to Icons.Filled.LocationOn,
+                NewspaperCategory.JOBS to Icons.Filled.Business,
+                NewspaperCategory.RADIO to Icons.Filled.Tv,
+                NewspaperCategory.GOVERNMENT to Icons.Filled.Public,
+                NewspaperCategory.STOCK_MARKET to Icons.Filled.Business,
+                NewspaperCategory.MAGAZINE to Icons.Filled.Newspaper,
+                NewspaperCategory.TECH to Icons.Filled.Public,
                 NewspaperCategory.TV_NEWS to Icons.Filled.Tv,
                 NewspaperCategory.SPORTS to Icons.Filled.SportsSoccer,
-                NewspaperCategory.ENGLISH to Icons.Filled.Language,
-                NewspaperCategory.BUSINESS to Icons.Filled.Business
+                NewspaperCategory.ENGLISH to Icons.Filled.Language
             )
 
             categories.forEach { (cat, icon) ->
+                val catName = if (strings == com.example.util.AppStrings.Bangla) cat.banglaName else cat.displayName
                 NavigationDrawerItem(
                     icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) },
-                    label = { Text(cat.displayName, fontSize = 14.sp) },
+                    label = { Text("${cat.emoji} $catName", fontSize = 14.sp) },
                     selected = false,
                     onClick = {
                         onSelectCategory(cat)
@@ -202,7 +243,7 @@ fun AppDrawerContent(
             // Other Actions
             NavigationDrawerItem(
                 icon = { Icon(Icons.Filled.Star, contentDescription = null) },
-                label = { Text("Rate Us") },
+                label = { Text(strings.rateUs) },
                 selected = selectedTab == BottomTab.RATE_US,
                 onClick = {
                     onSelectTab(BottomTab.RATE_US)
@@ -213,7 +254,7 @@ fun AppDrawerContent(
 
             NavigationDrawerItem(
                 icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                label = { Text("Settings") },
+                label = { Text(strings.settings) },
                 selected = selectedTab == BottomTab.SETTINGS,
                 onClick = {
                     onSelectTab(BottomTab.SETTINGS)

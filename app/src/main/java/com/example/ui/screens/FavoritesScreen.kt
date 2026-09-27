@@ -65,6 +65,8 @@ fun FavoritesScreen(
     onOpenMenu: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
+    val isBn = strings == com.example.util.AppStrings.Bangla
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val savedArticles by viewModel.savedArticles.collectAsStateWithLifecycle()
     val favoriteIds by viewModel.favoriteNewspaperIds.collectAsStateWithLifecycle()
@@ -78,7 +80,7 @@ fun FavoritesScreen(
         CenterAlignedTopAppBar(
             title = {
                 Text(
-                    text = "Favorites",
+                    text = strings.favorites,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -115,8 +117,9 @@ fun FavoritesScreen(
                 selected = selectedTabIndex == 0,
                 onClick = { selectedTabIndex = 0 },
                 text = {
+                    val tabLabel = if (isBn) "প্রিয় পত্রিকা (${favoriteNewspapers.size})" else "Saved Newspapers (${favoriteNewspapers.size})"
                     Text(
-                        text = "Saved Newspapers (${favoriteNewspapers.size})",
+                        text = tabLabel,
                         fontWeight = if (selectedTabIndex == 0) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 13.sp
                     )
@@ -127,8 +130,9 @@ fun FavoritesScreen(
                 selected = selectedTabIndex == 1,
                 onClick = { selectedTabIndex = 1 },
                 text = {
+                    val tabLabel = if (isBn) "অফলাইন সংবাদ (${savedArticles.size})" else "Saved Articles (${savedArticles.size})"
                     Text(
-                        text = "Saved Articles (${savedArticles.size})",
+                        text = tabLabel,
                         fontWeight = if (selectedTabIndex == 1) FontWeight.Bold else FontWeight.Medium,
                         fontSize = 13.sp
                     )
@@ -143,9 +147,10 @@ fun FavoritesScreen(
             // Saved Newspapers Tab
             if (favoriteNewspapers.isEmpty()) {
                 EmptyStateView(
-                    title = "No Favorite Newspapers Yet",
-                    description = "Star your preferred newspapers from the Sources tab to access them quickly here.",
-                    buttonText = "Explore Sources",
+                    title = if (isBn) "কোনো প্রিয় পত্রিকা যুক্ত করা হয়নি" else "No Favorite Newspapers Yet",
+                    description = if (isBn) "পত্রিকা ও সাইট তালিকা থেকে আপনার পছন্দের পত্রিকার স্টার বাটনে ট্যাপ করে এখানে যুক্ত করুন।"
+                    else "Star your preferred newspapers from the Sources tab to access them quickly here.",
+                    buttonText = if (isBn) "পত্রিকা ব্রাউজ করুন" else "Explore Sources",
                     onButtonClick = onExploreSources
                 )
             } else {
@@ -175,9 +180,10 @@ fun FavoritesScreen(
             // Saved Articles Tab (Offline Reading)
             if (savedArticles.isEmpty()) {
                 EmptyStateView(
-                    title = "No Articles Saved for Offline Reading",
-                    description = "Tap the bookmark icon on any news article to save it for reading anytime, even without an internet connection.",
-                    buttonText = "Explore News",
+                    title = if (isBn) "অফলাইনে পড়ার মতো কোনো সংরক্ষিত সংবাদ নেই" else "No Articles Saved for Offline Reading",
+                    description = if (isBn) "ইন্টারনেট ছাড়া যেকোনো সময় পড়তে যেকোনো সংবাদের বুকমার্ক আইকনে ট্যাপ করে সংরক্ষণ করুন।"
+                    else "Tap the bookmark icon on any news article to save it for reading anytime, even without an internet connection.",
+                    buttonText = if (isBn) "সংবাদ ফিড দেখুন" else "Explore News",
                     onButtonClick = onExploreSources
                 )
             } else {

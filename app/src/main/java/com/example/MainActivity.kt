@@ -1,10 +1,16 @@
 package com.example
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -29,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.BottomTab
 import com.example.ui.NewsViewModel
@@ -46,6 +53,7 @@ import com.example.ui.screens.SearchScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.SourcesScreen
 import com.example.ui.screens.SplashScreen
+import com.example.ui.screens.TvChannelsScreen
 import com.example.ui.theme.NewsHubTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -56,6 +64,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        handleNotificationIntent(intent)
 
         setContent {
             val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
@@ -73,6 +82,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleNotificationIntent(intent)
+    }
+
+    private fun handleNotificationIntent(intent: Intent?) {
+        val articleId = intent?.getStringExtra("target_article_id")
+        if (!articleId.isNullOrBlank()) {
+            viewModel.openArticle(articleId)
+        }
+    }
 }
 
 @Composable
@@ -80,16 +101,32 @@ fun NewsHubApp(
     viewModel: NewsViewModel,
     onExitApp: () -> Unit
 ) {
+    val context = LocalContext.current
     var showSplash by remember { mutableStateOf(true) }
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
     val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val activeArticleId by viewModel.activeArticleId.collectAsStateWithLifecycle()
     val activeNewspaperId by viewModel.activeNewspaperId.collectAsStateWithLifecycle()
     val activeCategory by viewModel.activeCategory.collectAsStateWithLifecycle()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Request notification permission on Android 13+ (API 33)
+    val notifPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { _ -> }
+
+    LaunchedEffect(notificationsEnabled) {
+        if (notificationsEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                notifPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     // Collect snackbar events
     LaunchedEffect(Unit) {
@@ -127,7 +164,8 @@ fun NewsHubApp(
                     },
                     onCloseDrawer = {
                         scope.launch { drawerState.close() }
-                    }
+                    },
+                    strings = strings
                 )
             }
         ) {
@@ -136,7 +174,8 @@ fun NewsHubApp(
                     if (currentScreen == ScreenDestination.MAIN_TABS) {
                         NewsHubBottomNavigation(
                             selectedTab = selectedTab,
-                            onTabSelected = { tab -> viewModel.navigateToTab(tab) }
+                            onTabSelected = { tab -> viewModel.navigateToTab(tab) },
+                            strings = strings
                         )
                     }
                 },
@@ -225,6 +264,13 @@ fun NewsHubApp(
                                     onOpenArticle = { id -> viewModel.openArticle(id) },
                                     onOpenNewspaper = { id -> viewModel.openNewspaper(id) },
                                     onOpenCategory = { cat -> viewModel.openCategory(cat) }
+                                )
+                            }
+                            ScreenDestination.TV_CHANNELS -> {
+                                TvChannelsScreen(
+                                    viewModel = viewModel,
+                                    onBack = { viewModel.handleBack() },
+                                    onOpenNewspaper = { id -> viewModel.openNewspaper(id) }
                                 )
                             }
                             ScreenDestination.SPLASH -> {

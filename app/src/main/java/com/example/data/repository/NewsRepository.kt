@@ -28,7 +28,7 @@ class NewsRepository(
 
     suspend fun initializeData() = withContext(Dispatchers.IO) {
         val count = articleDao.getCount()
-        if (count == 0) {
+        if (count < 50) {
             articleDao.insertArticles(InitialNewsData.seedArticles)
             // Pre-favorite a couple prominent newspapers for a welcoming initial state
             favoriteNewspaperDao.insertFavorite(FavoriteNewspaperEntity("prothom_alo"))
@@ -41,10 +41,12 @@ class NewsRepository(
             val candidates = NewspaperDataSource.allNewspapers.filter { it.rssUrl != null }
             val fetchedArticles = rssFetcher.fetchAllRealtime(candidates)
             if (fetchedArticles.isNotEmpty()) {
-                // Clear predefined seed articles so Top News and Latest News are strictly 100% real-time from the internet
-                articleDao.clearNonSavedSeedArticles()
-                articleDao.insertArticles(fetchedArticles)
-                Result.success(fetchedArticles.size)
+                // Ensure balanced insertion across all newspapers without wiping diverse local and national news
+                val balancedArticles = fetchedArticles
+                    .groupBy { it.newspaperId }
+                    .flatMap { (_, list) -> list.take(3) }
+                articleDao.insertArticles(balancedArticles)
+                Result.success(balancedArticles.size)
             } else {
                 Result.success(0)
             }

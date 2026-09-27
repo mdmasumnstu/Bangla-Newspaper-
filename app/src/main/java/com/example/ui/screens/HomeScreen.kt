@@ -1,5 +1,10 @@
 package com.example.ui.screens
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,20 +16,31 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -35,8 +51,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +66,7 @@ import com.example.ui.components.ArticleCard
 import com.example.ui.components.BreakingNewsBanner
 import com.example.ui.components.NewspaperGridCard
 import com.example.ui.components.TopNewsCarousel
+import com.example.util.NotificationHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,18 +79,24 @@ fun HomeScreen(
     onOpenMenu: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
     val breakingNews by viewModel.breakingNews.collectAsStateWithLifecycle()
     val topNews by viewModel.topNews.collectAsStateWithLifecycle()
     val allArticles by viewModel.allArticles.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
 
     var showNotificationsDialog by remember { mutableStateOf(false) }
 
-    // Filter out top news and breaking from latest feed to show diverse content
-    val latestArticles = remember(allArticles, topNews, breakingNews) {
-        val topIds = topNews.map { it.id }.toSet()
-        val latestList = allArticles.filter { !topIds.contains(it.id) }
-        if (latestList.isNotEmpty()) latestList else allArticles
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.setNotificationsEnabled(isGranted)
+    }
+
+    val latestArticles = remember(allArticles) {
+        allArticles.take(50)
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -78,7 +104,7 @@ fun HomeScreen(
         CenterAlignedTopAppBar(
             title = {
                 Text(
-                    text = "NewsHub BD",
+                    text = strings.appName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -116,11 +142,14 @@ fun HomeScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                IconButton(onClick = { showNotificationsDialog = true }, modifier = Modifier.testTag("home_notifications_btn")) {
+                IconButton(
+                    onClick = { showNotificationsDialog = true },
+                    modifier = Modifier.testTag("home_notifications_btn")
+                ) {
                     Icon(
-                        imageVector = Icons.Filled.Notifications,
+                        imageVector = if (notificationsEnabled) Icons.Filled.NotificationsActive else Icons.Filled.Notifications,
                         contentDescription = "Notifications",
-                        tint = MaterialTheme.colorScheme.onSurface
+                        tint = if (notificationsEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -139,33 +168,32 @@ fun HomeScreen(
             if (breakingNews.isNotEmpty()) {
                 item {
                     BreakingNewsBanner(
-                        breakingArticles = breakingNews,
-                        onClick = onOpenArticle
+                        articles = breakingNews,
+                        onArticleClick = { onOpenArticle(it.id) }
                     )
                 }
             }
 
-            // Top News Header & Carousel
+            // Top News Carousel
             if (topNews.isNotEmpty()) {
                 item {
                     Column {
                         Text(
-                            text = "Top News",
+                            text = strings.topNews,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(bottom = 10.dp)
                         )
-
                         TopNewsCarousel(
                             articles = topNews,
-                            onArticleClick = onOpenArticle
+                            onArticleClick = { onOpenArticle(it.id) }
                         )
                     }
                 }
             }
 
-            // Popular Newspapers (3 per row)
+            // Featured Bangladeshi Newspapers Grid
             item {
                 Column {
                     Row(
@@ -174,7 +202,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Popular Newspapers",
+                            text = strings.sources,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -182,7 +210,7 @@ fun HomeScreen(
 
                         TextButton(onClick = onSeeAllNews) {
                             Text(
-                                text = "All (120+)",
+                                text = "${strings.seeAll} (${NewspaperDataSource.allNewspapers.size}+)",
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp
@@ -197,7 +225,6 @@ fun HomeScreen(
                         ids.mapNotNull { NewspaperDataSource.getById(it) }
                     }
 
-                    // 2 rows of 3 columns
                     topNewspapers.chunked(3).forEach { rowPapers ->
                         Row(
                             modifier = Modifier
@@ -231,16 +258,31 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Latest News",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = strings.latestNews,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ) {
+                            Text(
+                                text = "${latestArticles.size}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
 
                     TextButton(onClick = onSeeAllNews, modifier = Modifier.testTag("see_all_news_btn")) {
                         Text(
-                            text = "See All",
+                            text = strings.seeAll,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp
@@ -264,45 +306,143 @@ fun HomeScreen(
         }
     }
 
-    // Notifications Dialog
+    // High Quality Interactive Notifications Dialog
     if (showNotificationsDialog) {
         AlertDialog(
             onDismissRequest = { showNotificationsDialog = false },
             title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Notifications,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(end = 8.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.NotificationsActive,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                        Text(
+                            text = strings.notifications,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Switch(
+                        checked = notificationsEnabled,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !NotificationHelper.hasNotificationPermission(context)
+                            ) {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                viewModel.setNotificationsEnabled(isChecked)
+                            }
+                        }
                     )
-                    Text("News Alerts")
                 }
             },
             text = {
-                Column {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Real-time breaking updates enabled:",
+                        text = strings.notificationDesc,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    breakingNews.take(3).forEach { item ->
+
+                    if (breakingNews.isNotEmpty()) {
                         Text(
-                            text = "• ${item.title}",
+                            text = strings.breakingNews,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        breakingNews.take(4).forEach { item ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 3.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        showNotificationsDialog = false
+                                        onOpenArticle(item.id)
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = item.newspaperName,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = item.title,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Medium,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = strings.noArticlesFound,
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    if (breakingNews.isEmpty()) {
-                        Text("No unread breaking alerts right now. You are all caught up!")
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    FilledTonalButton(
+                        onClick = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !NotificationHelper.hasNotificationPermission(context)
+                            ) {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                            viewModel.sendTestNotification()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Notifications,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = strings.testAlert)
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showNotificationsDialog = false }) {
-                    Text("Close")
+                    Text(strings.close)
                 }
             }
         )

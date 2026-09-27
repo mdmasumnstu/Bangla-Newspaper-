@@ -71,6 +71,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
     val currentTheme by viewModel.themeMode.collectAsStateWithLifecycle()
     val language by viewModel.selectedLanguage.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
@@ -86,7 +87,7 @@ fun SettingsScreen(
         CenterAlignedTopAppBar(
             title = {
                 Text(
-                    text = "Settings",
+                    text = strings.settings,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -116,7 +117,7 @@ fun SettingsScreen(
             // Theme Setting
             SettingsItemRow(
                 icon = Icons.Filled.Brightness4,
-                title = "Theme",
+                title = strings.theme,
                 subtitle = when (currentTheme) {
                     ThemeMode.SYSTEM -> "System Default"
                     ThemeMode.LIGHT -> "Light Mode"
@@ -154,13 +155,13 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                text = "Notifications",
+                                text = strings.notifications,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Manage breaking news alerts",
+                                text = strings.notificationDesc,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -169,7 +170,7 @@ fun SettingsScreen(
 
                     Switch(
                         checked = notificationsEnabled,
-                        onCheckedChange = { viewModel.notificationsEnabled.value = it },
+                        onCheckedChange = { viewModel.setNotificationsEnabled(it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = EmeraldPrimary
@@ -178,11 +179,22 @@ fun SettingsScreen(
                 }
             }
 
+            // Test Notification Action
+            if (notificationsEnabled) {
+                SettingsItemRow(
+                    icon = Icons.Filled.Notifications,
+                    title = strings.testAlert,
+                    subtitle = "Trigger real-time notification preview",
+                    onClick = { viewModel.sendTestNotification() },
+                    tag = "setting_test_notification"
+                )
+            }
+
             // Language Setting
             SettingsItemRow(
                 icon = Icons.Filled.Language,
-                title = "Language",
-                subtitle = if (language == "English") "English / বাংলা" else "বাংলা / English",
+                title = strings.language,
+                subtitle = strings.languageDesc,
                 onClick = { showLanguageDialog = true },
                 tag = "setting_language"
             )
@@ -191,7 +203,7 @@ fun SettingsScreen(
             SettingsItemRow(
                 icon = Icons.Filled.Info,
                 title = "About",
-                subtitle = "App information & version 1.0",
+                subtitle = "App information & version 2.0.0",
                 onClick = { showAboutDialog = true },
                 tag = "setting_about"
             )
@@ -221,7 +233,7 @@ fun SettingsScreen(
                 subtitle = "Feedback & support team",
                 onClick = {
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
-                        data = Uri.parse("mailto:support@newshubbd.com")
+                        data = Uri.parse("mailto:mdmasumsps@gmail.com")
                         putExtra(Intent.EXTRA_SUBJECT, "NewsHub BD Support Request")
                     }
                     try { context.startActivity(intent) } catch (_: Exception) {}
@@ -255,7 +267,7 @@ fun SettingsScreen(
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
-            title = { Text("Choose Theme") },
+            title = { Text(strings.theme) },
             text = {
                 Column {
                     listOf(
@@ -268,7 +280,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    viewModel.themeMode.value = mode
+                                    viewModel.setTheme(mode)
                                     showThemeDialog = false
                                 }
                                 .padding(vertical = 8.dp)
@@ -276,7 +288,7 @@ fun SettingsScreen(
                             RadioButton(
                                 selected = currentTheme == mode,
                                 onClick = {
-                                    viewModel.themeMode.value = mode
+                                    viewModel.setTheme(mode)
                                     showThemeDialog = false
                                 }
                             )
@@ -288,7 +300,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showThemeDialog = false }) {
-                    Text("Done")
+                    Text(strings.done)
                 }
             }
         )
@@ -298,7 +310,7 @@ fun SettingsScreen(
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
-            title = { Text("Choose Language") },
+            title = { Text(strings.language) },
             text = {
                 Column {
                     listOf("English", "বাংলা").forEach { lang ->
@@ -307,7 +319,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    viewModel.selectedLanguage.value = lang
+                                    viewModel.setLanguage(lang)
                                     showLanguageDialog = false
                                 }
                                 .padding(vertical = 8.dp)
@@ -315,7 +327,7 @@ fun SettingsScreen(
                             RadioButton(
                                 selected = language == lang,
                                 onClick = {
-                                    viewModel.selectedLanguage.value = lang
+                                    viewModel.setLanguage(lang)
                                     showLanguageDialog = false
                                 }
                             )
@@ -327,7 +339,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showLanguageDialog = false }) {
-                    Text("Done")
+                    Text(strings.done)
                 }
             }
         )
@@ -341,15 +353,15 @@ fun SettingsScreen(
             text = {
                 Column {
                     Text(
-                        text = "Version 1.0.0 (Build 100)",
+                        text = "Version 2.0.0 (Build 200)",
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "All Bangladeshi Newspapers in One Place.\n\n" +
-                                "NewsHub BD aggregates real-time news and latest updates from 20+ prominent Bangladeshi newspapers including Prothom Alo, The Daily Star, Kaler Kantho, Somokal, Jugantor, bdnews24, Dhaka Tribune, and more.\n\n" +
-                                "All articles can be filtered, searched, and saved to your local device for seamless offline reading without an internet connection."
+                        text = "All Bangladeshi Newspapers, Media & Portals in One Place.\n\n" +
+                                "NewsHub BD brings together 400+ Bangladeshi newspapers, online portals, local division dailies, job circulars, FM radio stations, all 50+ government ministries & citizen portals, stock market financial news, literary magazines, and tech sites.\n\n" +
+                                "All sources can be filtered, searched, and accessed directly in-app, with offline news reading support."
                     )
                 }
             },

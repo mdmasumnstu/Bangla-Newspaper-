@@ -61,6 +61,8 @@ fun RateUsScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
+    val isBn = strings == com.example.util.AppStrings.Bangla
     val rating by viewModel.userRating.collectAsStateWithLifecycle()
     val feedback by viewModel.feedbackText.collectAsStateWithLifecycle()
     val submitted by viewModel.ratingSubmitted.collectAsStateWithLifecycle()
@@ -69,7 +71,7 @@ fun RateUsScreen(
         CenterAlignedTopAppBar(
             title = {
                 Text(
-                    text = "Rate Us",
+                    text = strings.rateUs,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -117,7 +119,7 @@ fun RateUsScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Rate NewsHub BD",
+                text = if (isBn) "নিউজহাব বিডি রেটিং দিন" else "Rate NewsHub BD",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -126,7 +128,7 @@ fun RateUsScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "If you like our app, please take a moment to rate us. Your support keeps us going!",
+                text = if (isBn) strings.rateUsPrompt else "If you like our app, please take a moment to rate us. Your support keeps us going!",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -159,11 +161,11 @@ fun RateUsScreen(
 
             Text(
                 text = when (rating) {
-                    5 -> "Loved it! Best news app 🌟"
-                    4 -> "Great experience 👍"
-                    3 -> "Good, has potential 👌"
-                    2 -> "Could be better 💭"
-                    else -> "Needs improvement 🔧"
+                    5 -> if (isBn) "চমৎকার! সেরা সংবাদ অ্যাপ 🌟" else "Loved it! Best news app 🌟"
+                    4 -> if (isBn) "খুব ভালো অভিজ্ঞতা 👍" else "Great experience 👍"
+                    3 -> if (isBn) "মোটামুটি ভালো 👌" else "Good, has potential 👌"
+                    2 -> if (isBn) "আরও উন্নতি প্রয়োজন 💭" else "Could be better 💭"
+                    else -> if (isBn) "উন্নতি দরকার 🔧" else "Needs improvement 🔧"
                 },
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
@@ -184,7 +186,7 @@ fun RateUsScreen(
                     .testTag("submit_rating_btn")
             ) {
                 Text(
-                    text = if (submitted) "Rating Submitted ✓" else "Submit Rating",
+                    text = if (submitted) (if (isBn) "রেটিং জমা হয়েছে ✓" else "Rating Submitted ✓") else (if (isBn) "রেটিং জমা দিন" else "Submit Rating"),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
@@ -197,7 +199,7 @@ fun RateUsScreen(
             OutlinedButton(
                 onClick = {
                     val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
-                        data = Uri.parse("mailto:support@newshubbd.com")
+                        data = Uri.parse("mailto:mdmasumsps@gmail.com")
                         putExtra(Intent.EXTRA_SUBJECT, "NewsHub BD Feedback - Rating: $rating Stars")
                         putExtra(Intent.EXTRA_TEXT, feedback.ifBlank { "Here is my feedback on NewsHub BD:" })
                     }

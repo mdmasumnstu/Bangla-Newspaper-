@@ -42,21 +42,51 @@ fun CategoryViewScreen(
     onOpenSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
+    val isBn = strings == com.example.util.AppStrings.Bangla
     val favoriteIds by viewModel.favoriteNewspaperIds.collectAsStateWithLifecycle()
     val newspapers = rememberNewspapersForCategory(category, favoriteIds)
 
-    val title = when (category) {
-        NewspaperCategory.BENGALI -> "Bengali Newspapers"
-        NewspaperCategory.ONLINE -> "Online Portals"
-        NewspaperCategory.BUSINESS -> "Business News"
-        NewspaperCategory.SPORTS -> "Sports News"
-        NewspaperCategory.EDUCATION -> "Education News"
-        NewspaperCategory.ENGLISH -> "English Newspapers"
-        NewspaperCategory.AGENCIES -> "News Agencies"
-        NewspaperCategory.INTERNATIONAL -> "International News"
-        NewspaperCategory.TV_NEWS -> "TV News Portals"
-        NewspaperCategory.LOCAL -> "Local Newspapers"
-        NewspaperCategory.ALL -> "All Newspapers"
+    val title = if (isBn) {
+        when (category) {
+            NewspaperCategory.BENGALI -> "বাংলা পত্রিকা"
+            NewspaperCategory.ONLINE -> "অনলাইন পোর্টাল"
+            NewspaperCategory.LOCAL -> "স্থানীয় পত্রিকা"
+            NewspaperCategory.JOBS -> "চাকরির পোর্টাল"
+            NewspaperCategory.RADIO -> "এফএম রেডিও পোর্টাল"
+            NewspaperCategory.GOVERNMENT -> "সরকারি বাতায়ন ও মন্ত্রণালয়"
+            NewspaperCategory.STOCK_MARKET -> "শেয়ার বাজার পত্রিকা"
+            NewspaperCategory.MAGAZINE -> "বাংলা ম্যাগাজিন"
+            NewspaperCategory.TECH -> "টেক সাইট ও ব্লগ"
+            NewspaperCategory.BUSINESS -> "বাণিজ্য সংবাদ"
+            NewspaperCategory.SPORTS -> "খেলাধুলার খবর"
+            NewspaperCategory.EDUCATION -> "শিক্ষা সংবাদ"
+            NewspaperCategory.ENGLISH -> "ইংরেজি পত্রিকা"
+            NewspaperCategory.AGENCIES -> "সংবাদ সংস্থা"
+            NewspaperCategory.INTERNATIONAL -> "আন্তর্জাতিক সংবাদ"
+            NewspaperCategory.TV_NEWS -> "টিভি নিউজ পোর্টাল"
+            NewspaperCategory.ALL -> "সকল পত্রিকা ও সাইট"
+        }
+    } else {
+        when (category) {
+            NewspaperCategory.BENGALI -> "Bengali Newspapers"
+            NewspaperCategory.ONLINE -> "Online Portals"
+            NewspaperCategory.LOCAL -> "Local Newspapers"
+            NewspaperCategory.JOBS -> "Job Portals"
+            NewspaperCategory.RADIO -> "FM Radio Stations"
+            NewspaperCategory.GOVERNMENT -> "Government Portals"
+            NewspaperCategory.STOCK_MARKET -> "Stock Market News"
+            NewspaperCategory.MAGAZINE -> "Bangla Magazines"
+            NewspaperCategory.TECH -> "Tech Sites & Blogs"
+            NewspaperCategory.BUSINESS -> "Business News"
+            NewspaperCategory.SPORTS -> "Sports News"
+            NewspaperCategory.EDUCATION -> "Education News"
+            NewspaperCategory.ENGLISH -> "English Newspapers"
+            NewspaperCategory.AGENCIES -> "News Agencies"
+            NewspaperCategory.INTERNATIONAL -> "International News"
+            NewspaperCategory.TV_NEWS -> "TV News Portals"
+            NewspaperCategory.ALL -> "All Newspapers"
+        }
     }
 
     Column(modifier = modifier.fillMaxSize()) {
