@@ -67,6 +67,9 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
     private val _activeNewspaperId = MutableStateFlow<String?>(null)
     val activeNewspaperId: StateFlow<String?> = _activeNewspaperId.asStateFlow()
 
+    private val _activeWebUrlOverride = MutableStateFlow<String?>(null)
+    val activeWebUrlOverride: StateFlow<String?> = _activeWebUrlOverride.asStateFlow()
+
     private val _activeCategory = MutableStateFlow<NewspaperCategory?>(null)
     val activeCategory: StateFlow<NewspaperCategory?> = _activeCategory.asStateFlow()
 
@@ -243,8 +246,9 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            repository.initializeData()
-            // Immediately fetch real-time news from the internet on launch
+            repository.initializeData(getApplication())
+            // Delay background network refresh slightly so initial app launch is instantaneous
+            kotlinx.coroutines.delay(2500)
             refreshNewsSilent()
         }
 
@@ -259,16 +263,14 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun refreshNewsSilent() {
         viewModelScope.launch {
-            _isRefreshing.value = true
             val result = repository.refreshRealtimeNews()
-            _isRefreshing.value = false
             if (result.isSuccess && (result.getOrNull() ?: 0) > 0 && notificationsEnabled.value) {
                 val breaking = breakingNews.value.firstOrNull()
                 if (breaking != null) {
                     NotificationHelper.sendBreakingNewsNotification(
                         context = getApplication(),
                         title = breaking.title,
-                        body = breaking.summary.take(120),
+                        body = breaking.description.take(120),
                         articleId = breaking.id
                     )
                 }
@@ -301,9 +303,9 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
             breaking?.title ?: "Breaking News: Bangladesh Live Update"
         }
         val body = if (isBn) {
-            breaking?.summary?.take(120) ?: "নিউজহাব বিডি তে যুক্ত হয়েছে $totalCount+ পত্রিকা, চাকরি, রেডিও ও মন্ত্রণালয়ের তথ্য।"
+            breaking?.description?.take(120) ?: "নিউজহাব বিডি তে যুক্ত হয়েছে $totalCount+ পত্রিকা, চাকরি, রেডিও ও মন্ত্রণালয়ের তথ্য।"
         } else {
-            breaking?.summary?.take(120) ?: "NewsHub BD now features $totalCount+ newspapers, jobs, radio & ministries."
+            breaking?.description?.take(120) ?: "NewsHub BD now features $totalCount+ newspapers, jobs, radio & ministries."
         }
         NotificationHelper.sendBreakingNewsNotification(
             context = getApplication(),
@@ -324,8 +326,9 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
         pushScreen(ScreenDestination.ARTICLE_DETAIL)
     }
 
-    fun openNewspaper(newspaperId: String) {
+    fun openNewspaper(newspaperId: String, customUrl: String? = null) {
         _activeNewspaperId.value = newspaperId
+        _activeWebUrlOverride.value = customUrl
         pushScreen(ScreenDestination.NEWSPAPER_DETAIL)
     }
 

@@ -226,15 +226,13 @@ fun TvChannelsScreen(
         }
     }
 
-    // Helper functions for clicking URLs
+    // Helper functions for clicking URLs: Always open in-app
     val onLaunchUrl: (String) -> Unit = { url ->
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        } catch (_: Exception) {
-            Toast.makeText(context, "Could not open browser", Toast.LENGTH_SHORT).show()
+        val channel = allChannels.find { it.websiteUrl == url }
+        if (channel != null) {
+            onOpenNewspaper(channel.id)
+        } else {
+            viewModel.openNewspaper("tv_portal", url)
         }
     }
 

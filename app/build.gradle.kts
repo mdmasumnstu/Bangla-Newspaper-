@@ -20,8 +20,11 @@ android {
     versionCode = 2
     versionName = "2.0.0"
 
-    resourceConfigurations += listOf("en", "bn")
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+  }
+
+  androidResources {
+    localeFilters += listOf("en", "bn")
   }
 
   signingConfigs {

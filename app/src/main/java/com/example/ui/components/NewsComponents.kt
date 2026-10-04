@@ -152,11 +152,13 @@ fun TopNewsCarousel(
     val pagerState = rememberPagerState(pageCount = { articles.size })
 
     // Auto-scroll through top news
-    LaunchedEffect(pagerState) {
+    LaunchedEffect(pagerState, articles.size) {
         while (true) {
             delay(5000)
-            val nextPage = (pagerState.currentPage + 1) % articles.size
-            pagerState.animateScrollToPage(nextPage)
+            if (!pagerState.isScrollInProgress) {
+                val nextPage = (pagerState.currentPage + 1) % articles.size
+                pagerState.animateScrollToPage(nextPage)
+            }
         }
     }
 
@@ -165,7 +167,7 @@ fun TopNewsCarousel(
     Column(modifier = modifier.fillMaxWidth()) {
         HorizontalPager(
             state = pagerState,
-            userScrollEnabled = false,
+            userScrollEnabled = true,
             contentPadding = PaddingValues(horizontal = 0.dp),
             modifier = Modifier
                 .fillMaxWidth()

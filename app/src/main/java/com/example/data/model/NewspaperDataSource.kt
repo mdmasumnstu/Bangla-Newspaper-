@@ -1,7 +1,7 @@
 package com.example.data.model
 
 object NewspaperDataSource {
-    val allNewspapers: List<Newspaper> = listOf(
+    private val _baseNewspapers: List<Newspaper> = listOf(
         // ==================== BENGALI NEWSPAPERS (25) ====================
         Newspaper(
             id = "prothom_alo",
@@ -1496,12 +1496,24 @@ object NewspaperDataSource {
             tagline = "ভয়েস অব দ্য ব্রিটিশ বাংলাদেশি",
             primaryColorHex = 0xFFBE185D
         )
-    ) + LocalNewspaperDataSource.localNewspapers + ExtraSourcesDataSource.extraSources
+    )
 
-    fun getById(id: String): Newspaper? = allNewspapers.find { it.id == id }
+    val allNewspapers: List<Newspaper> by lazy {
+        _baseNewspapers + LocalNewspaperDataSource.localNewspapers + ExtraSourcesDataSource.extraSources
+    }
+
+    private val byIdMap: Map<String, Newspaper> by lazy {
+        allNewspapers.associateBy { it.id }
+    }
+
+    private val byCategoryMap: Map<NewspaperCategory, List<Newspaper>> by lazy {
+        allNewspapers.groupBy { it.category }
+    }
+
+    fun getById(id: String): Newspaper? = byIdMap[id]
 
     fun getByCategory(category: NewspaperCategory): List<Newspaper> {
         return if (category == NewspaperCategory.ALL) allNewspapers
-        else allNewspapers.filter { it.category == category }
+        else byCategoryMap[category] ?: emptyList()
     }
 }

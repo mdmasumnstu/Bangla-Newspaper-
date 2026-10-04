@@ -309,7 +309,7 @@ fun SearchScreen(
                                             onOpenNewspaper(newspaper.id)
                                         },
                                         onToggleFavorite = {
-                                            viewModel.toggleFavoriteNewspaper(newspaper.id, newspaper.isFavorite)
+                                            viewModel.toggleFavoriteNewspaper(newspaper.id)
                                         }
                                     )
                                 }

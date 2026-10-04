@@ -29,6 +29,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -102,7 +103,7 @@ fun NewsHubApp(
     onExitApp: () -> Unit
 ) {
     val context = LocalContext.current
-    var showSplash by remember { mutableStateOf(true) }
+    var showSplash by remember { mutableStateOf(false) }
     val strings by viewModel.appStrings.collectAsStateWithLifecycle()
     val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
@@ -152,7 +153,7 @@ fun NewsHubApp(
     } else {
         ModalNavigationDrawer(
             drawerState = drawerState,
-            gesturesEnabled = false,
+            gesturesEnabled = true,
             drawerContent = {
                 AppDrawerContent(
                     selectedTab = selectedTab,
@@ -165,7 +166,8 @@ fun NewsHubApp(
                     onCloseDrawer = {
                         scope.launch { drawerState.close() }
                     },
-                    strings = strings
+                    strings = strings,
+                    onOpenTvChannels = { viewModel.openTvChannels() }
                 )
             }
         ) {
@@ -229,32 +231,38 @@ fun NewsHubApp(
                             }
                             ScreenDestination.ARTICLE_DETAIL -> {
                                 activeArticleId?.let { articleId ->
-                                    ArticleDetailScreen(
-                                        articleId = articleId,
-                                        viewModel = viewModel,
-                                        onBack = { viewModel.handleBack() }
-                                    )
+                                    key(articleId) {
+                                        ArticleDetailScreen(
+                                            articleId = articleId,
+                                            viewModel = viewModel,
+                                            onBack = { viewModel.handleBack() }
+                                        )
+                                    }
                                 }
                             }
                             ScreenDestination.NEWSPAPER_DETAIL -> {
                                 activeNewspaperId?.let { newspaperId ->
-                                    NewspaperDetailScreen(
-                                        newspaperId = newspaperId,
-                                        viewModel = viewModel,
-                                        onBack = { viewModel.handleBack() },
-                                        onOpenArticle = { id -> viewModel.openArticle(id) }
-                                    )
+                                    key(newspaperId) {
+                                        NewspaperDetailScreen(
+                                            newspaperId = newspaperId,
+                                            viewModel = viewModel,
+                                            onBack = { viewModel.handleBack() },
+                                            onOpenArticle = { id -> viewModel.openArticle(id) }
+                                        )
+                                    }
                                 }
                             }
                             ScreenDestination.CATEGORY_VIEW -> {
                                 activeCategory?.let { category ->
-                                    CategoryViewScreen(
-                                        category = category,
-                                        viewModel = viewModel,
-                                        onBack = { viewModel.handleBack() },
-                                        onOpenNewspaper = { id -> viewModel.openNewspaper(id) },
-                                        onOpenSearch = { viewModel.openSearch() }
-                                    )
+                                    key(category) {
+                                        CategoryViewScreen(
+                                            category = category,
+                                            viewModel = viewModel,
+                                            onBack = { viewModel.handleBack() },
+                                            onOpenNewspaper = { id -> viewModel.openNewspaper(id) },
+                                            onOpenSearch = { viewModel.openSearch() }
+                                        )
+                                    }
                                 }
                             }
                             ScreenDestination.SEARCH -> {

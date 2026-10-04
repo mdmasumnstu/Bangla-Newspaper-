@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Language
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
@@ -62,7 +64,8 @@ fun AppDrawerContent(
     onSelectTab: (BottomTab) -> Unit,
     onSelectCategory: (NewspaperCategory) -> Unit,
     onCloseDrawer: () -> Unit,
-    strings: com.example.util.AppStrings = com.example.util.AppStrings.English
+    strings: com.example.util.AppStrings = com.example.util.AppStrings.English,
+    onOpenTvChannels: (() -> Unit)? = null
 ) {
     ModalDrawerSheet(
         modifier = Modifier.width(300.dp)
@@ -86,7 +89,22 @@ fun AppDrawerContent(
                     )
                     .padding(20.dp)
             ) {
-                Column {
+                // Cross Sign (Close Navigation Drawer)
+                IconButton(
+                    onClick = onCloseDrawer,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                        .testTag("nav_drawer_cross_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close Navigation",
+                        tint = Color.White
+                    )
+                }
+
+                Column(modifier = Modifier.padding(end = 36.dp)) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = Color.White,
@@ -177,7 +195,11 @@ fun AppDrawerContent(
                 },
                 selected = false,
                 onClick = {
-                    onSelectCategory(NewspaperCategory.TV_NEWS)
+                    if (onOpenTvChannels != null) {
+                        onOpenTvChannels()
+                    } else {
+                        onSelectCategory(NewspaperCategory.TV_NEWS)
+                    }
                     onCloseDrawer()
                 },
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)

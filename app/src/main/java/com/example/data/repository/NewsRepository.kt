@@ -26,19 +26,26 @@ class NewsRepository(
     val savedArticles: Flow<List<ArticleEntity>> = articleDao.getSavedArticles()
     val favoriteNewspaperIds: Flow<List<String>> = favoriteNewspaperDao.getFavoriteNewspaperIds()
 
-    suspend fun initializeData() = withContext(Dispatchers.IO) {
-        val count = articleDao.getCount()
-        if (count < 50) {
-            articleDao.insertArticles(InitialNewsData.seedArticles)
-            // Pre-favorite a couple prominent newspapers for a welcoming initial state
-            favoriteNewspaperDao.insertFavorite(FavoriteNewspaperEntity("prothom_alo"))
-            favoriteNewspaperDao.insertFavorite(FavoriteNewspaperEntity("the_daily_star"))
+    suspend fun initializeData(context: Context? = null) = withContext(Dispatchers.IO) {
+        val prefs = context?.getSharedPreferences("newshub_bd_prefs", Context.MODE_PRIVATE)
+        val isInitialized = prefs?.getBoolean("db_seed_initialized", false) ?: false
+        if (!isInitialized) {
+            val count = articleDao.getCount()
+            if (count < 50) {
+                articleDao.insertArticles(InitialNewsData.seedArticles)
+                // Pre-favorite a couple prominent newspapers for a welcoming initial state
+                favoriteNewspaperDao.insertFavorite(FavoriteNewspaperEntity("prothom_alo"))
+                favoriteNewspaperDao.insertFavorite(FavoriteNewspaperEntity("the_daily_star"))
+            }
+            prefs?.edit()?.putBoolean("db_seed_initialized", true)?.apply()
         }
     }
 
     suspend fun refreshRealtimeNews(): Result<Int> = withContext(Dispatchers.IO) {
         try {
-            val candidates = NewspaperDataSource.allNewspapers.filter { it.rssUrl != null }
+            val priorityIds = setOf("prothom_alo", "the_daily_star", "bdnews24", "dhaka_tribune", "jugantor", "kaler_kantho", "ittefaq", "bangla_tribune")
+            val allCandidates = NewspaperDataSource.allNewspapers.filter { it.rssUrl != null }
+            val candidates = allCandidates.filter { it.id in priorityIds }.ifEmpty { allCandidates.take(6) }
             val fetchedArticles = rssFetcher.fetchAllRealtime(candidates)
             if (fetchedArticles.isNotEmpty()) {
                 // Ensure balanced insertion across all newspapers without wiping diverse local and national news

@@ -38,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -72,6 +73,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val strings by viewModel.appStrings.collectAsStateWithLifecycle()
+    val isBn = strings == com.example.util.AppStrings.Bangla
     val currentTheme by viewModel.themeMode.collectAsStateWithLifecycle()
     val language by viewModel.selectedLanguage.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
@@ -81,6 +83,7 @@ fun SettingsScreen(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
+    var showCopyrightDialog by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -220,10 +223,19 @@ fun SettingsScreen(
             // Terms & Conditions
             SettingsItemRow(
                 icon = Icons.Filled.Description,
-                title = "Terms & Conditions",
-                subtitle = "Usage terms and guidelines",
+                title = if (isBn) "শর্তাবলী ও নিয়মাবলী" else "Terms & Conditions",
+                subtitle = if (isBn) "ব্যবহার নির্দেশিকা ও নীতিমালা" else "Usage terms and guidelines",
                 onClick = { showTermsDialog = true },
                 tag = "setting_terms"
+            )
+
+            // Copyright & Fair Use Policy (Zero Infringement / DMCA Protection)
+            SettingsItemRow(
+                icon = Icons.Filled.Info,
+                title = if (isBn) "কপিরাইট ও ফেয়ার ইউজ নীতি" else "Copyright & Fair Use Policy",
+                subtitle = if (isBn) "মেধাস্বত্ব ও কন্টেন্ট অপসারণ নির্দেশিকা" else "Fair use doctrine & DMCA takedown",
+                onClick = { showCopyrightDialog = true },
+                tag = "setting_copyright"
             )
 
             // Contact Us
@@ -395,15 +407,109 @@ fun SettingsScreen(
     if (showTermsDialog) {
         AlertDialog(
             onDismissRequest = { showTermsDialog = false },
-            title = { Text("Terms & Conditions") },
+            title = { Text(if (isBn) "শর্তাবলী ও নীতিমালা" else "Terms & Conditions") },
             text = {
-                Text(
-                    text = "All news headlines, articles, and newspaper mastheads are the intellectual property of their respective Bangladeshi publishers and news networks. NewsHub BD acts as an RSS reader and aggregator providing direct links to original sources."
-                )
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(
+                        text = if (isBn)
+                            "১. NewsHub BD একটি পাবলিক নিউজ ডিরেক্টরি এবং আরএসএস ফিড রিডার।\n\n" +
+                            "২. সমস্ত সংবাদ শিরোনাম, চিত্র ও কন্টেন্ট তাদের মূল প্রকাশক ও সংবাদ মাধ্যমের নিজস্ব মেধাস্বত্ব।\n\n" +
+                            "৩. এই অ্যাপে কোনো কপিরাইটযুক্ত পূর্ণাঙ্গ সংবাদ অননুমোদিতভাবে সংরক্ষণ বা প্রচার করা হয় না। পাঠকদের সুবিধার্থে সংক্ষিপ্ত সারসংক্ষেপ ও সরাসরি রেফারেল লিংক প্রদর্শিত হয় যাতে মূল প্রকাশকরা তাদের ট্রাফিক ও বিজ্ঞাপনের পূর্ণ সুবিধা পান।\n\n" +
+                            "৪. অ্যাপটি আন্তর্জাতিক কপিরাইট ও ফেয়ার ইউজ আইন মেনে পরিচালিত হয়।"
+                        else
+                            "1. NewsHub BD operates strictly as a news index and RSS reader.\n\n" +
+                            "2. All news headlines, mastheads, logos, and articles are the intellectual property of their respective publishers.\n\n" +
+                            "3. The app does not republish full copyrighted stories. Brief snippets are provided under Fair Use to refer readers directly to the publishers' original websites.\n\n" +
+                            "4. Full articles and ad revenue directly benefit the original news publishers.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 20.sp
+                    )
+                }
             },
             confirmButton = {
                 TextButton(onClick = { showTermsDialog = false }) {
-                    Text("OK")
+                    Text(if (isBn) "বুঝেছি" else "OK")
+                }
+            }
+        )
+    }
+
+    // Copyright & Fair Use Policy Dialog (DMCA Safe Harbor)
+    if (showCopyrightDialog) {
+        AlertDialog(
+            onDismissRequest = { showCopyrightDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        tint = EmeraldPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isBn) "কপিরাইট ও ফেয়ার ইউজ নীতি" else "Copyright & Fair Use Policy",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = if (isBn) "কপিরাইট সুরক্ষা ও প্রকাশকদের সম্মাননা" else "Copyright & Publisher Protection",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 14.sp
+                    )
+
+                    Text(
+                        text = if (isBn)
+                            "• ফেয়ার ইউজ নীতি (Fair Use): NewsHub BD কোনো সংবাদের মালিকানা দাবি করে না। আন্তর্জাতিক কপিরাইট আইন ও Berne Convention মেনে জনস্বার্থে কেবল সংবাদ শিরোনাম ও সংক্ষিপ্ত সূচি প্রদর্শন করা হয়।\n\n" +
+                            "• মূল প্রকাশকের ওয়েবসাইটে রিডাইরেক্ট: ব্যবহারকারী কোনো সংবাদে ক্লিক করলে তা ইন-অ্যাপ ব্রাউজার বা ডিভাইসের ব্রাউজারে মূল সংবাদপত্রের আসল HTTPS লিংকে ওপেন হয়। এর ফলে সমস্ত ভিজিটর, পেজভিউ এবং বিজ্ঞাপন রাজস্ব শতভাগ মূল প্রকাশক লাভ করেন।\n\n" +
+                            "• ট্রেডমার্ক ও বুদ্ধিবৃত্তিক সম্পদ: সকল সংবাদপত্রের নাম ও লোগো সংশ্লিষ্ট কর্তৃপক্ষের রেজিস্টার্ড সম্পত্তি।\n\n" +
+                            "• দ্রুত কন্টেন্ট অপসারণ নির্দেশিকা (DMCA Takedown): কোনো কপিরাইট স্বত্বাধিকারী বা সংবাদমাধ্যম যদি তাদের ফিড বা লিংক এই প্ল্যাটফর্ম থেকে প্রত্যাহার করতে চান, তবে কোনো আনুষ্ঠানিক বিতর্ক ছাড়াই অনুরোধ গৃহীত হবে।"
+                        else
+                            "• Fair Use Compliance: NewsHub BD claims no ownership over third-party news content. We operate under international Fair Use doctrines to display only headline excerpts and search indexes.\n\n" +
+                            "• Direct Publisher Referral: Tapping any news item directs the reader directly to the original publisher's live website. All traffic, impressions, and ad revenues belong 100% to the publisher.\n\n" +
+                            "• Trademarks & Branding: All publisher names and logos are property of their respective owners.\n\n" +
+                            "• DMCA & Takedown Requests: Any publisher requesting removal of their RSS feed or index link will be honored immediately without dispute.",
+                        style = MaterialTheme.typography.bodySmall,
+                        lineHeight = 19.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = if (isBn) "কপিরাইট ও অপসারণের জন্য যোগাযোগ:" else "Contact for DMCA / Takedowns:",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Email: mdmasumice@gmail.com",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = EmeraldPrimary
+                            )
+                            Text(
+                                text = if (isBn) "সময়সীমা: ২৪-৪৮ ঘণ্টার মধ্যে কার্যকর" else "Response time: Within 24-48 hours",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCopyrightDialog = false }) {
+                    Text(if (isBn) "বন্ধ করুন" else "Close")
                 }
             }
         )

@@ -48,6 +48,7 @@ import com.example.R
 import com.example.ui.theme.EmeraldDarkPrimaryContainer
 import com.example.ui.theme.EmeraldPrimary
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun SplashScreen(
@@ -58,15 +59,18 @@ fun SplashScreen(
     val alpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        alpha.animateTo(1f, animationSpec = tween(700))
-        scale.animateTo(1f, animationSpec = tween(700))
-        delay(2200)
+        launch {
+            alpha.animateTo(1f, animationSpec = tween(200))
+        }
+        scale.animateTo(1f, animationSpec = tween(200))
+        delay(100)
         onDismiss()
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
+            .clickable { onDismiss() }
             .background(
                 Brush.verticalGradient(
                     listOf(

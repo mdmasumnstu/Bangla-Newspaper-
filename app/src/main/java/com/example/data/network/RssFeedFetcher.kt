@@ -20,8 +20,8 @@ import java.util.regex.Pattern
 
 class RssFeedFetcher {
     private val client = OkHttpClient.Builder()
-        .connectTimeout(7, TimeUnit.SECONDS)
-        .readTimeout(8, TimeUnit.SECONDS)
+        .connectTimeout(4, TimeUnit.SECONDS)
+        .readTimeout(4, TimeUnit.SECONDS)
         .followRedirects(true)
         .build()
 
@@ -142,6 +142,8 @@ class RssFeedFetcher {
                                 val isBreakingStory = hasBreakingKeyword || (articles.isEmpty() && newspaper.id in listOf("prothom_alo", "bbc_bangla", "bdnews24", "the_daily_star"))
                                 val isTopStory = (articles.size <= 2 && newspaper.id in listOf("prothom_alo", "the_daily_star", "bbc_bangla", "jago_news_24", "risingbd", "ittefaq", "kaler_kantho", "somokal", "jugantor")) || (articles.size < 2)
 
+                                val excerpt = if (cleanDesc.length > 280) cleanDesc.take(277) + "..." else cleanDesc
+
                                 articles.add(
                                     ArticleEntity(
                                         id = articleId,
@@ -149,8 +151,8 @@ class RssFeedFetcher {
                                         newspaperName = newspaper.name,
                                         newspaperBanglaName = newspaper.banglaName,
                                         title = cleanTitle,
-                                        description = if (cleanDesc.length > 250) cleanDesc.take(247) + "..." else cleanDesc,
-                                        content = if (cleanDesc.isNotBlank()) cleanDesc else cleanTitle,
+                                        description = excerpt,
+                                        content = if (excerpt.isNotBlank()) excerpt else cleanTitle,
                                         articleUrl = link.ifBlank { newspaper.websiteUrl },
                                         imageUrl = fallbackImage,
                                         category = newspaper.category.displayName,

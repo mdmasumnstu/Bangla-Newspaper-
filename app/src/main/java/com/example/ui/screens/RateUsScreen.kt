@@ -222,7 +222,7 @@ fun RateUsScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Send Feedback",
+                        text = if (isBn) "মতামত পাঠান" else "Send Feedback",
                         color = EmeraldPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp
@@ -236,7 +236,7 @@ fun RateUsScreen(
             OutlinedTextField(
                 value = feedback,
                 onValueChange = { viewModel.feedbackText.value = it },
-                placeholder = { Text("Tell us what you think...") },
+                placeholder = { Text(if (isBn) "আপনার মূল্যবান মতামত লিখুন..." else "Tell us what you think...") },
                 minLines = 3,
                 maxLines = 5,
                 shape = RoundedCornerShape(12.dp),
@@ -261,7 +261,7 @@ fun RateUsScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Thanks for making NewsHub BD better for everyone!",
+                        text = if (isBn) "নিউজহাব বিডি আরও উন্নত করতে সাহায্য করার জন্য ধন্যবাদ!" else "Thanks for making NewsHub BD better for everyone!",
                         style = MaterialTheme.typography.bodySmall,
                         color = EmeraldPrimary,
                         fontWeight = FontWeight.Medium

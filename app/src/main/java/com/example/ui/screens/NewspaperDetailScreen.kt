@@ -1,16 +1,23 @@
 package com.example.ui.screens
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslError
+import android.os.Message
 import android.view.ViewGroup
+import android.webkit.CookieManager
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -92,20 +99,51 @@ fun NewspaperDetailScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val strings by viewModel.appStrings.collectAsStateWithLifecycle()
+    val isBn = strings == com.example.util.AppStrings.Bangla
     val favoriteIds by viewModel.favoriteNewspaperIds.collectAsStateWithLifecycle()
     val articles by viewModel.activeNewspaperArticles.collectAsStateWithLifecycle()
 
     val newspaper = NewspaperDataSource.getById(newspaperId) ?: return
+    val webUrlOverride by viewModel.activeWebUrlOverride.collectAsStateWithLifecycle()
+    val targetNewsUrl = webUrlOverride ?: newspaper.websiteUrl
     val isFavorite = favoriteIds.contains(newspaper.id)
 
     // 0 = Live Website (In-App Browser), 1 = Newspaper Articles
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var webViewInstance by remember { mutableStateOf<WebView?>(null) }
-    var progress by remember { mutableFloatStateOf(0f) }
-    var isLoading by remember { mutableStateOf(true) }
-    var hasError by remember { mutableStateOf(false) }
+    var selectedTab by remember(newspaperId, targetNewsUrl) { mutableIntStateOf(0) }
+    var webViewInstance by remember(newspaperId, targetNewsUrl) { mutableStateOf<WebView?>(null) }
+    var progress by remember(newspaperId, targetNewsUrl) { mutableFloatStateOf(0f) }
+    var isLoading by remember(newspaperId, targetNewsUrl) { mutableStateOf(true) }
+    var hasError by remember(newspaperId, targetNewsUrl) { mutableStateOf(false) }
 
-    // Intercept back button: if webView can go back, navigate back inside the website
+    fun openInExternalBrowser(url: String) {
+        try {
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(browserIntent)
+        } catch (_: Exception) {
+            Toast.makeText(
+                context,
+                if (isBn) "ব্রাউজার খোলা যায়নি" else "Could not open device browser",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    // Clean up WebView resources when navigating away to ensure high efficiency and zero memory leaks
+    DisposableEffect(newspaperId, targetNewsUrl) {
+        onDispose {
+            try {
+                webViewInstance?.stopLoading()
+                webViewInstance?.onPause()
+                webViewInstance?.destroy()
+                webViewInstance = null
+            } catch (_: Exception) {}
+        }
+    }
+
+    // Intercept hardware/system back button: if webView can go back, navigate back inside the website
     BackHandler(enabled = true) {
         if (selectedTab == 0 && webViewInstance?.canGoBack() == true) {
             webViewInstance?.goBack()
@@ -139,7 +177,7 @@ fun NewspaperDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = newspaper.websiteUrl
+                            text = targetNewsUrl
                                 .removePrefix("https://")
                                 .removePrefix("http://")
                                 .removePrefix("www.")
@@ -155,18 +193,12 @@ fun NewspaperDetailScreen(
             },
             navigationIcon = {
                 IconButton(
-                    onClick = {
-                        if (selectedTab == 0 && webViewInstance?.canGoBack() == true) {
-                            webViewInstance?.goBack()
-                        } else {
-                            onBack()
-                        }
-                    },
-                    modifier = Modifier.testTag("np_back_btn")
+                    onClick = onBack,
+                    modifier = Modifier.testTag("np_close_btn")
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -176,6 +208,7 @@ fun NewspaperDetailScreen(
                 IconButton(
                     onClick = {
                         hasError = false
+                        isLoading = true
                         webViewInstance?.reload()
                     },
                     modifier = Modifier.testTag("np_reload_btn")
@@ -183,6 +216,18 @@ fun NewspaperDetailScreen(
                     Icon(
                         imageVector = Icons.Filled.Refresh,
                         contentDescription = "Reload",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                // Open in External Device Browser
+                IconButton(
+                    onClick = { openInExternalBrowser(webViewInstance?.url ?: targetNewsUrl) },
+                    modifier = Modifier.testTag("np_open_browser_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.OpenInBrowser,
+                        contentDescription = "Open in Browser",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -202,13 +247,15 @@ fun NewspaperDetailScreen(
                 // Share link
                 IconButton(
                     onClick = {
-                        val currentUrl = webViewInstance?.url ?: newspaper.websiteUrl
+                        val currentUrl = webViewInstance?.url ?: targetNewsUrl
                         val sendIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
                             putExtra(Intent.EXTRA_SUBJECT, newspaper.name)
                             putExtra(Intent.EXTRA_TEXT, "${newspaper.banglaName} - ${newspaper.name}\n$currentUrl")
                         }
-                        context.startActivity(Intent.createChooser(sendIntent, "Share Newspaper"))
+                        try {
+                            context.startActivity(Intent.createChooser(sendIntent, if (isBn) "শেয়ার করুন" else "Share Newspaper"))
+                        } catch (_: Exception) {}
                     },
                     modifier = Modifier.testTag("np_share_btn")
                 ) {
@@ -264,7 +311,7 @@ fun NewspaperDetailScreen(
                 onClick = { selectedTab = 0 },
                 text = {
                     Text(
-                        text = "🌐 লাইভ পত্রিকা (Live)",
+                        text = if (isBn) "🌐 লাইভ পোর্টাল / পত্রিকা" else "🌐 Live Website",
                         fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal,
                         fontSize = 13.sp
                     )
@@ -276,7 +323,7 @@ fun NewspaperDetailScreen(
                 onClick = { selectedTab = 1 },
                 text = {
                     Text(
-                        text = "📰 সংবাদ তালিকা (${articles.size})",
+                        text = if (isBn) "📰 সংবাদ তালিকা (${articles.size})" else "📰 News Articles (${articles.size})",
                         fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal,
                         fontSize = 13.sp
                     )
@@ -288,131 +335,267 @@ fun NewspaperDetailScreen(
         if (selectedTab == 0) {
             // ==================== IN-APP BROWSER (WEBVIEW) ====================
             Box(modifier = Modifier.fillMaxSize()) {
-                if (hasError) {
-                    // Offline / Error fallback
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
-                            modifier = Modifier.size(64.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Filled.WifiOff,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(32.dp)
-                                )
+                AndroidView(
+                    factory = { ctx ->
+                        WebView(ctx).apply {
+                            layoutParams = ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                            )
+                            settings.apply {
+                                javaScriptEnabled = true
+                                domStorageEnabled = true
+                                databaseEnabled = true
+                                loadWithOverviewMode = true
+                                useWideViewPort = true
+                                setSupportZoom(true)
+                                builtInZoomControls = true
+                                displayZoomControls = false
+                                cacheMode = WebSettings.LOAD_DEFAULT
+                                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                                allowFileAccess = true
+                                allowContentAccess = true
+                                javaScriptCanOpenWindowsAutomatically = true
+                                setSupportMultipleWindows(true)
+                                mediaPlaybackRequiresUserGesture = false
+                                defaultTextEncodingName = "UTF-8"
+
+                                // Standard Mobile Chrome User-Agent without non-standard app suffixes
+                                val defaultUa = userAgentString
+                                userAgentString = if (defaultUa.isNullOrBlank()) {
+                                    "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36"
+                                } else {
+                                    defaultUa.replace("; wv", "").replace("Version/4.0 ", "")
+                                }
                             }
+                            val webView = this
+                            val cookieManager = CookieManager.getInstance()
+                            cookieManager.setAcceptCookie(true)
+                            cookieManager.setAcceptThirdPartyCookies(webView, true)
+
+                            fun handleUrlNavigation(url: String?): Boolean {
+                                if (url.isNullOrBlank()) return false
+                                if (url.startsWith("http://") || url.startsWith("https://")) {
+                                    return false // keep in this in-app webview
+                                }
+                                return try {
+                                    val intent = if (url.startsWith("intent://")) {
+                                        Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
+                                    } else {
+                                        Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                    }
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    ctx.startActivity(intent)
+                                    true
+                                } catch (_: Exception) {
+                                    true // consume unknown schemes to avoid net::ERR_UNKNOWN_URL_SCHEME
+                                }
+                            }
+
+                            fun handleLoadError(failingUrl: String?) {
+                                isLoading = false
+                                hasError = true
+                                // Do not automatically launch external browser; keep user inside the app
+                            }
+
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                                    return handleUrlNavigation(request?.url?.toString())
+                                }
+
+                                @Deprecated("Deprecated in Java")
+                                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                                    return handleUrlNavigation(url)
+                                }
+
+                                override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
+                                    // Crucial for Bangladesh Govt (.gov.bd) and local media with intermediate SSL chain issues
+                                    handler?.proceed()
+                                }
+
+                                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                    isLoading = true
+                                    hasError = false
+                                }
+
+                                override fun onPageFinished(view: WebView?, url: String?) {
+                                    isLoading = false
+                                    try {
+                                        CookieManager.getInstance().flush()
+                                    } catch (_: Exception) {}
+                                }
+
+                                override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                                    if (request?.isForMainFrame == true) {
+                                        handleLoadError(request.url?.toString())
+                                    }
+                                }
+
+                                @Deprecated("Deprecated in Java")
+                                override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                                    if (failingUrl == null || failingUrl == targetNewsUrl || failingUrl == view?.url) {
+                                        handleLoadError(failingUrl)
+                                    }
+                                }
+
+                                override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
+                                    if (request?.isForMainFrame == true) {
+                                        val statusCode = errorResponse?.statusCode ?: 200
+                                        if (statusCode >= 400 && statusCode != 401) {
+                                            handleLoadError(request.url?.toString())
+                                        }
+                                    }
+                                }
+                            }
+
+                            webChromeClient = object : WebChromeClient() {
+                                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                                    progress = newProgress / 100f
+                                    if (newProgress >= 100) {
+                                        isLoading = false
+                                    }
+                                }
+
+                                override fun onCreateWindow(
+                                    view: WebView?,
+                                    isDialog: Boolean,
+                                    isUserGesture: Boolean,
+                                    resultMsg: Message?
+                                ): Boolean {
+                                    val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
+                                    val tempWebView = WebView(view?.context ?: return false).apply {
+                                        webViewClient = object : WebViewClient() {
+                                            override fun shouldOverrideUrlLoading(v: WebView?, request: WebResourceRequest?): Boolean {
+                                                val newUrl = request?.url?.toString()
+                                                if (!newUrl.isNullOrBlank()) {
+                                                    view?.loadUrl(newUrl)
+                                                }
+                                                return true
+                                            }
+
+                                            @Deprecated("Deprecated in Java")
+                                            override fun shouldOverrideUrlLoading(v: WebView?, newUrl: String?): Boolean {
+                                                if (!newUrl.isNullOrBlank()) {
+                                                    view?.loadUrl(newUrl)
+                                                }
+                                                return true
+                                            }
+                                        }
+                                    }
+                                    transport.webView = tempWebView
+                                    resultMsg.sendToTarget()
+                                    return true
+                                }
+                            }
+
+                            loadUrl(targetNewsUrl)
+                            webViewInstance = this
                         }
+                    },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .testTag("in_app_webview"),
+                    update = { view ->
+                        if (view.url != targetNewsUrl && targetNewsUrl.isNotBlank() && view.url == null) {
+                            view.loadUrl(targetNewsUrl)
+                        }
+                    }
+                )
 
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "ইন্টারনেট সংযোগ পাওয়া যায়নি",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Text(
-                            text = "লাইভ পত্রিকা লোড করা যাচ্ছে না। পুনরায় চেষ্টা করুন অথবা অফলাইন সংরক্ষিত সংবাদগুলো পড়ুন।",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            OutlinedButton(onClick = {
-                                hasError = false
-                                webViewInstance?.reload()
-                            }) {
-                                Text("পুনরায় চেষ্টা করুন")
+                // Error Overlay (Shown only on severe disconnect, keeping WebView alive so reload works)
+                if (hasError) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background.copy(alpha = 0.98f)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                                modifier = Modifier.size(64.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Filled.WifiOff,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                }
                             }
-                            Button(onClick = { selectedTab = 1 }) {
-                                Text("সংবাদ তালিকা দেখুন")
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Text(
+                                text = if (isBn) "ওয়েবসাইট লোড করতে সমস্যা হয়েছে" else "Could Not Load Website",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = if (isBn) "ইন্টারনেট সংযোগ বা সার্ভারের সাময়িক সমস্যার কারণে পেজটি লোড হতে পারেনি। অনুগ্রহ করে পুনরায় চেষ্টা করুন।" else "The webpage could not be loaded due to network or server issues. Please tap retry to reload.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Button(
+                                    onClick = {
+                                        hasError = false
+                                        isLoading = true
+                                        webViewInstance?.loadUrl(targetNewsUrl)
+                                    },
+                                    modifier = Modifier.testTag("retry_webview_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Refresh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(if (isBn) "পুনরায় চেষ্টা করুন" else "Retry")
+                                }
+
+                                Button(
+                                    onClick = {
+                                        val targetUrl = webViewInstance?.url ?: targetNewsUrl
+                                        openInExternalBrowser(targetUrl)
+                                    },
+                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    modifier = Modifier.testTag("open_external_browser_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.OpenInBrowser,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(if (isBn) "ব্রাউজারে খুলুন" else "Open in Browser")
+                                }
+                            }
+
+                            if (articles.isNotEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedButton(onClick = { selectedTab = 1 }) {
+                                    Text(if (isBn) "সংবাদ তালিকা দেখুন (${articles.size})" else "View News Articles (${articles.size})")
+                                }
                             }
                         }
                     }
-                } else {
-                    AndroidView(
-                        factory = { ctx ->
-                            WebView(ctx).apply {
-                                layoutParams = ViewGroup.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT
-                                )
-                                settings.apply {
-                                    javaScriptEnabled = true
-                                    domStorageEnabled = true
-                                    loadWithOverviewMode = true
-                                    useWideViewPort = true
-                                    builtInZoomControls = true
-                                    displayZoomControls = false
-                                    cacheMode = WebSettings.LOAD_DEFAULT
-                                    databaseEnabled = true
-                                    userAgentString = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36 NewsHubBD/2.0"
-                                }
-                                webViewClient = object : WebViewClient() {
-                                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                                        val url = request?.url?.toString() ?: return false
-                                        if (url.startsWith("http://") || url.startsWith("https://")) {
-                                            return false // keep in this in-app webview
-                                        }
-                                        return try {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                            ctx.startActivity(intent)
-                                            true
-                                        } catch (e: Exception) {
-                                            true
-                                        }
-                                    }
-
-                                    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                                        isLoading = true
-                                        hasError = false
-                                    }
-
-                                    override fun onPageFinished(view: WebView?, url: String?) {
-                                        isLoading = false
-                                    }
-
-                                    override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                                        if (request?.isForMainFrame == true) {
-                                            isLoading = false
-                                            hasError = true
-                                        }
-                                    }
-                                }
-                                webChromeClient = object : WebChromeClient() {
-                                    override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                                        progress = newProgress / 100f
-                                        if (newProgress >= 100) {
-                                            isLoading = false
-                                        }
-                                    }
-                                }
-                                loadUrl(newspaper.websiteUrl)
-                                webViewInstance = this
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .testTag("in_app_webview"),
-                        update = {
-                            // kept alive
-                        }
-                    )
                 }
 
                 // In-app web bottom toolbar
@@ -442,25 +625,25 @@ fun NewspaperDetailScreen(
                         }
 
                         IconButton(
-                            onClick = { webViewInstance?.loadUrl(newspaper.websiteUrl) }
+                            onClick = { webViewInstance?.loadUrl(targetNewsUrl) }
                         ) {
                             Text(
-                                text = "Home",
+                                text = if (isBn) "হোম" else "Home",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
 
+                        // Cross Sign (Close Navigation)
                         IconButton(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(webViewInstance?.url ?: newspaper.websiteUrl))
-                                context.startActivity(intent)
-                            }
+                            onClick = onBack,
+                            modifier = Modifier.testTag("np_bottom_close_cross_btn")
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.OpenInBrowser,
-                                contentDescription = "External Browser"
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Close",
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }

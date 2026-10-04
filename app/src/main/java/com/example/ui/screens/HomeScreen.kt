@@ -86,6 +86,7 @@ fun HomeScreen(
     val allArticles by viewModel.allArticles.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val favoriteIds by viewModel.favoriteNewspaperIds.collectAsStateWithLifecycle()
 
     var showNotificationsDialog by remember { mutableStateOf(false) }
 
@@ -168,8 +169,8 @@ fun HomeScreen(
             if (breakingNews.isNotEmpty()) {
                 item {
                     BreakingNewsBanner(
-                        articles = breakingNews,
-                        onArticleClick = { onOpenArticle(it.id) }
+                        breakingArticles = breakingNews,
+                        onClick = { onOpenArticle(it) }
                     )
                 }
             }
@@ -187,7 +188,7 @@ fun HomeScreen(
                         )
                         TopNewsCarousel(
                             articles = topNews,
-                            onArticleClick = { onOpenArticle(it.id) }
+                            onArticleClick = { onOpenArticle(it) }
                         )
                     }
                 }
@@ -220,9 +221,11 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    val topNewspapers = remember {
+                    val topNewspapers = remember(favoriteIds) {
                         val ids = listOf("prothom_alo", "the_daily_star", "ittefaq", "bdnews24", "kaler_kantho", "somokal")
-                        ids.mapNotNull { NewspaperDataSource.getById(it) }
+                        ids.mapNotNull { id ->
+                            NewspaperDataSource.getById(id)?.copy(isFavorite = favoriteIds.contains(id))
+                        }
                     }
 
                     topNewspapers.chunked(3).forEach { rowPapers ->
@@ -238,7 +241,7 @@ fun HomeScreen(
                                         newspaper = newspaper,
                                         onClick = { onOpenNewspaper(newspaper.id) },
                                         onToggleFavorite = {
-                                            viewModel.toggleFavoriteNewspaper(newspaper.id, newspaper.isFavorite)
+                                            viewModel.toggleFavoriteNewspaper(newspaper.id)
                                         }
                                     )
                                 }
