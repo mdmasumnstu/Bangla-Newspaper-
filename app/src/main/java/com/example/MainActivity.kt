@@ -153,7 +153,7 @@ fun NewsHubApp(
     } else {
         ModalNavigationDrawer(
             drawerState = drawerState,
-            gesturesEnabled = true,
+            gesturesEnabled = currentScreen == ScreenDestination.MAIN_TABS,
             drawerContent = {
                 AppDrawerContent(
                     selectedTab = selectedTab,

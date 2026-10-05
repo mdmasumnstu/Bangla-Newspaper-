@@ -91,10 +91,10 @@ fun ArticleDetailScreen(
                 )
             },
             navigationIcon = {
-                IconButton(onClick = onBack, modifier = Modifier.testTag("article_back_btn")) {
+                IconButton(onClick = onBack, modifier = Modifier.testTag("article_close_btn")) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -129,18 +129,6 @@ fun ArticleDetailScreen(
                     Icon(
                         imageVector = Icons.Filled.Share,
                         contentDescription = "Share",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // Cross Sign (Close Navigation)
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.testTag("article_close_cross_btn")
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Close",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
