@@ -80,18 +80,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.data.model.Newspaper
 import com.example.data.model.NewspaperDataSource
 import com.example.ui.NewsViewModel
 import com.example.ui.theme.BreakingRed
+import com.example.util.TvChannelLogos
 
 /**
  * Categorization of Bangladesh TV Channels
@@ -122,7 +127,10 @@ enum class TvChannelCategory(
             "dbc_news",
             "news24_tv",
             "ekhon_tv",
-            "btv_news"
+            "btv_news",
+            "global_tv_bd",
+            "star_news_bd",
+            "channel_1_bd"
         )
     ),
     ENTERTAINMENT(
@@ -145,7 +153,20 @@ enum class TvChannelCategory(
             "my_tv",
             "satv_bd",
             "deepto_tv",
-            "btv_national"
+            "btv_national",
+            "btv_chattogram",
+            "sangsad_tv",
+            "mohona_tv",
+            "bijoy_tv",
+            "channel_9",
+            "asian_tv",
+            "bangla_tv",
+            "duronto_tv",
+            "nagorik_tv",
+            "ananda_tv",
+            "nexus_tv",
+            "green_tv",
+            "islamic_tv"
         )
     ),
     SPORTS_MUSIC(
@@ -317,7 +338,7 @@ fun TvChannelsScreen(
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        "Search 27 TV channels (e.g. Somoy, NTV, Sports)...",
+                        "Search ${allChannels.size} TV channels (e.g. Somoy, NTV, Sports)...",
                         fontSize = 13.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -647,6 +668,84 @@ private fun TvCategoryHeader(
 }
 
 /**
+ * TV Channel Logo Badge with official image logo and beautiful monogram fallback
+ */
+@Composable
+fun TvChannelLogoBadge(
+    channel: Newspaper,
+    modifier: Modifier = Modifier,
+    size: Dp = 54.dp
+) {
+    val context = LocalContext.current
+    val brandColor = Color(channel.primaryColorHex)
+    val initialLogoUrl = remember(channel.id, channel.websiteUrl) {
+        TvChannelLogos.getLogoUrl(channel)
+    }
+    var currentUrl by remember(channel.id) { mutableStateOf(initialLogoUrl) }
+    var fallbackAttempted by remember(channel.id) { mutableStateOf(false) }
+    var imageFailed by remember(channel.id) { mutableStateOf(false) }
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = Color.White,
+        shadowElevation = 2.dp,
+        border = BorderStroke(1.5.dp, brandColor.copy(alpha = 0.35f)),
+        modifier = modifier.size(size)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(5.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!imageFailed && currentUrl.isNotBlank()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(currentUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "${channel.name} Logo",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize(),
+                    onError = {
+                        if (!fallbackAttempted) {
+                            fallbackAttempted = true
+                            currentUrl = TvChannelLogos.getFaviconFallback(channel)
+                        } else {
+                            imageFailed = true
+                        }
+                    }
+                )
+            } else {
+                // High-polish brand gradient fallback with channel abbreviation
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    brandColor,
+                                    brandColor.copy(alpha = 0.82f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = channel.banglaName.take(2).ifBlank { channel.name.take(2) },
+                        color = Color.White,
+                        fontWeight = FontWeight.Black,
+                        fontSize = (size.value * 0.35f).sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
  * Grid Card Component with Clickable URL & Channel Info
  */
 @Composable
@@ -715,23 +814,11 @@ fun TvChannelGridCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Channel Icon / Monogram
-            Surface(
-                shape = CircleShape,
-                color = brandColor.copy(alpha = 0.14f),
-                border = BorderStroke(2.dp, brandColor.copy(alpha = 0.5f)),
-                modifier = Modifier.size(54.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = channel.banglaName.take(2).ifBlank { channel.name.take(2) },
-                        color = brandColor,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 17.sp,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
+            // Channel Official Logo Badge
+            TvChannelLogoBadge(
+                channel = channel,
+                size = 56.dp
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -899,23 +986,11 @@ fun TvChannelListCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Channel Circular Monogram
-                Surface(
-                    shape = CircleShape,
-                    color = brandColor.copy(alpha = 0.15f),
-                    border = BorderStroke(1.5.dp, brandColor.copy(alpha = 0.5f)),
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = channel.banglaName.take(2).ifBlank { channel.name.take(2) },
-                            color = brandColor,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 15.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
+                // Channel Official Logo Badge
+                TvChannelLogoBadge(
+                    channel = channel,
+                    size = 50.dp
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -1151,7 +1226,7 @@ private fun TvEmptyState(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = onClearSearch) {
-            Text("Show All 27 Channels")
+            Text("Show All Channels")
         }
     }
 }

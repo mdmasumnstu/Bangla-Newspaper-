@@ -47,14 +47,17 @@ class ExampleRobolectricTest {
   @Test
   fun `verify TV categories and channel assignments`() {
     val newsCat = com.example.ui.screens.TvChannelCategory.NEWS
-    assertEquals(10, newsCat.channelIds.size)
+    assertEquals(13, newsCat.channelIds.size)
     org.junit.Assert.assertTrue(newsCat.channelIds.contains("somoy_tv"))
     org.junit.Assert.assertTrue(newsCat.channelIds.contains("jamuna_tv"))
+    org.junit.Assert.assertTrue(newsCat.channelIds.contains("global_tv_bd"))
 
     val entCat = com.example.ui.screens.TvChannelCategory.ENTERTAINMENT
-    assertEquals(13, entCat.channelIds.size)
+    assertEquals(26, entCat.channelIds.size)
     org.junit.Assert.assertTrue(entCat.channelIds.contains("channel_i"))
     org.junit.Assert.assertTrue(entCat.channelIds.contains("ntv_bd"))
+    org.junit.Assert.assertTrue(entCat.channelIds.contains("duronto_tv"))
+    org.junit.Assert.assertTrue(entCat.channelIds.contains("nagorik_tv"))
 
     val sportsMusicCat = com.example.ui.screens.TvChannelCategory.SPORTS_MUSIC
     assertEquals(3, sportsMusicCat.channelIds.size)
@@ -66,9 +69,9 @@ class ExampleRobolectricTest {
     assertEquals(1, intlCat.channelIds.size)
     org.junit.Assert.assertTrue(intlCat.channelIds.contains("channel_s_uk"))
 
-    // Total 27 channels across all categories
+    // Total 43 channels across all categories
     val totalCategorized = com.example.ui.screens.TvChannelCategory.entries.sumOf { it.channelIds.size }
-    assertEquals(27, totalCategorized)
+    assertEquals(43, totalCategorized)
 
     // All channels must have valid URLs starting with http
     com.example.ui.screens.TvChannelCategory.entries.flatMap { it.channelIds }.forEach { channelId ->

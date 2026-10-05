@@ -42,6 +42,7 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.NewspaperCategory
+import com.example.data.model.NewspaperDataSource
 import com.example.ui.BottomTab
 import com.example.ui.theme.EmeraldPrimary
 
@@ -67,6 +69,8 @@ fun AppDrawerContent(
     strings: com.example.util.AppStrings = com.example.util.AppStrings.English,
     onOpenTvChannels: (() -> Unit)? = null
 ) {
+    val tvChannelsCount = remember { NewspaperDataSource.getByCategory(NewspaperCategory.TV_NEWS).size }
+
     ModalDrawerSheet(
         modifier = Modifier.width(300.dp)
     ) {
@@ -184,7 +188,7 @@ fun AppDrawerContent(
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Text(
-                                text = "27",
+                                text = "$tvChannelsCount",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontWeight = FontWeight.Bold,

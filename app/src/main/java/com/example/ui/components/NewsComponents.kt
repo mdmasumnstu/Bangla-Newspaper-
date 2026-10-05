@@ -58,7 +58,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +85,7 @@ import com.example.ui.BottomTab
 import com.example.ui.theme.BreakingRed
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.StarGold
+import com.example.util.TvChannelLogos
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -445,24 +450,43 @@ fun NewspaperCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // Stylized logo avatar with publication brand accent
+                // Stylized logo avatar with real publication brand logo
+                val brandColor = Color(newspaper.primaryColorHex)
+                val itemLogoUrl = remember(newspaper.id, newspaper.websiteUrl) { TvChannelLogos.getLogoUrl(newspaper) }
+                var itemLogoFailed by remember(newspaper.id) { mutableStateOf(false) }
+
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = Color(newspaper.primaryColorHex).copy(alpha = 0.12f),
-                    border = CardDefaults.outlinedCardBorder().copy(
-                        brush = Brush.horizontalGradient(
-                            listOf(Color(newspaper.primaryColorHex).copy(alpha = 0.3f), Color(newspaper.primaryColorHex).copy(alpha = 0.3f))
-                        )
-                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (!itemLogoFailed) Color.White else brandColor.copy(alpha = 0.12f),
+                    border = BorderStroke(1.5.dp, brandColor.copy(alpha = 0.35f)),
+                    shadowElevation = if (!itemLogoFailed) 1.5.dp else 0.dp,
                     modifier = Modifier.size(48.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = newspaper.banglaName.take(2).ifBlank { newspaper.name.take(2) },
-                            color = Color(newspaper.primaryColorHex),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(if (!itemLogoFailed) 4.dp else 0.dp)
+                    ) {
+                        if (!itemLogoFailed && !itemLogoUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(itemLogoUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = newspaper.name,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxSize(),
+                                onError = { itemLogoFailed = true }
+                            )
+                        } else {
+                            Text(
+                                text = newspaper.banglaName.take(2).ifBlank { newspaper.name.take(2) },
+                                color = brandColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
                 }
 
@@ -550,21 +574,44 @@ fun NewspaperGridCard(
                     .padding(top = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Circle brand avatar with monogram
+                // Brand avatar or official TV/newspaper logo
+                val brandColor = Color(newspaper.primaryColorHex)
+                val logoUrl = remember(newspaper.id, newspaper.websiteUrl) { TvChannelLogos.getLogoUrl(newspaper) }
+                var imageFailed by remember(newspaper.id) { mutableStateOf(false) }
+
                 Surface(
-                    shape = CircleShape,
-                    color = Color(newspaper.primaryColorHex).copy(alpha = 0.14f),
-                    border = BorderStroke(1.5.dp, Color(newspaper.primaryColorHex).copy(alpha = 0.45f)),
-                    modifier = Modifier.size(44.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (!imageFailed) Color.White else brandColor.copy(alpha = 0.14f),
+                    border = BorderStroke(1.5.dp, brandColor.copy(alpha = 0.4f)),
+                    shadowElevation = if (!imageFailed) 1.5.dp else 0.dp,
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = newspaper.banglaName.take(2).ifBlank { newspaper.name.take(2) },
-                            color = Color(newspaper.primaryColorHex),
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
-                        )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(if (!imageFailed) 4.dp else 0.dp)
+                    ) {
+                        if (!imageFailed && !logoUrl.isNullOrBlank()) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(logoUrl)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = newspaper.name,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.fillMaxSize(),
+                                onError = { imageFailed = true }
+                            )
+                        } else {
+                            Text(
+                                text = newspaper.banglaName.take(2).ifBlank { newspaper.name.take(2) },
+                                color = brandColor,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
                 }
 

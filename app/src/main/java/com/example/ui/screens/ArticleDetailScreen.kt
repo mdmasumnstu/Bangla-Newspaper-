@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,9 +55,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.data.model.NewspaperDataSource
 import com.example.ui.NewsViewModel
 import com.example.ui.theme.BreakingRed
 import com.example.ui.theme.EmeraldPrimary
+import com.example.util.TvChannelLogos
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -217,17 +220,46 @@ fun ArticleDetailScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
+                val publisherNewspaper = remember(currentArticle.newspaperId) {
+                    NewspaperDataSource.getById(currentArticle.newspaperId)
+                }
+                val publisherLogoUrl = remember(publisherNewspaper?.id) {
+                    publisherNewspaper?.let { TvChannelLogos.getLogoUrl(it) }
+                }
+
                 Surface(
-                    shape = RoundedCornerShape(4.dp),
+                    shape = RoundedCornerShape(6.dp),
                     color = EmeraldPrimary.copy(alpha = 0.12f)
                 ) {
-                    Text(
-                        text = currentArticle.newspaperBanglaName.ifBlank { currentArticle.newspaperName },
-                        color = EmeraldPrimary,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        if (!publisherLogoUrl.isNullOrBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(publisherLogoUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = currentArticle.newspaperName,
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier.fillMaxSize().padding(1.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
+                        Text(
+                            text = currentArticle.newspaperBanglaName.ifBlank { currentArticle.newspaperName },
+                            color = EmeraldPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Text(

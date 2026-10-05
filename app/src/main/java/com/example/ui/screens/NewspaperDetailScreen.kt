@@ -22,7 +22,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.util.TvChannelLogos
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -156,15 +161,43 @@ fun NewspaperDetailScreen(
         // In-App Browser Top Bar
         CenterAlignedTopAppBar(
             title = {
+                val npLogoUrl = remember(newspaper.id, newspaper.websiteUrl) { TvChannelLogos.getLogoUrl(newspaper) }
+                var npLogoFailed by remember(newspaper.id) { mutableStateOf(false) }
+
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = newspaper.banglaName.ifBlank { newspaper.name },
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        if (!npLogoFailed && !npLogoUrl.isNullOrBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color.White,
+                                border = BorderStroke(1.dp, Color(newspaper.primaryColorHex).copy(alpha = 0.35f)),
+                                modifier = Modifier.size(20.dp)
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(npLogoUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = newspaper.name,
+                                    contentScale = ContentScale.Fit,
+                                    modifier = Modifier.fillMaxSize().padding(2.dp),
+                                    onError = { npLogoFailed = true }
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
+                        Text(
+                            text = newspaper.banglaName.ifBlank { newspaper.name },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center

@@ -1491,10 +1491,172 @@ object NewspaperDataSource {
             name = "Channel S UK",
             banglaName = "চ্যানেল এস ইউকে",
             category = NewspaperCategory.TV_NEWS,
-            websiteUrl = "https://chsuk.tv",
+            websiteUrl = "https://channelsuk.tv",
             rssUrl = null,
             tagline = "ভয়েস অব দ্য ব্রিটিশ বাংলাদেশি",
             primaryColorHex = 0xFFBE185D
+        ),
+
+        // --- 5. Additional Requested National & Satellite TV Channels ---
+        Newspaper(
+            id = "btv_chattogram",
+            name = "BTV Chattogram",
+            banglaName = "বিটিভি চট্টগ্রাম",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.btvchattogram.gov.bd",
+            rssUrl = null,
+            tagline = "চট্টগ্রাম কেন্দ্র বাংলাদেশ টেলিভিশন",
+            primaryColorHex = 0xFF047857
+        ),
+        Newspaper(
+            id = "sangsad_tv",
+            name = "Sangsad TV",
+            banglaName = "সংসদ বাংলাদেশ টেলিভিশন",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://parliament.gov.bd",
+            rssUrl = null,
+            tagline = "জাতীয় সংসদের সরাসরি সম্প্রচার ও শিক্ষামূলক কার্যক্রম",
+            primaryColorHex = 0xFF0F766E
+        ),
+        Newspaper(
+            id = "mohona_tv",
+            name = "Mohona TV",
+            banglaName = "মোহনা টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.mohona.tv",
+            rssUrl = null,
+            tagline = "বাংলার প্রতিচ্ছবি",
+            primaryColorHex = 0xFFB91C1C
+        ),
+        Newspaper(
+            id = "bijoy_tv",
+            name = "Bijoy TV",
+            banglaName = "বিজয় টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://bijoy.tv",
+            rssUrl = null,
+            tagline = "হৃদয়ে লাল সবুজ",
+            primaryColorHex = 0xFF15803D
+        ),
+        Newspaper(
+            id = "channel_9",
+            name = "Channel 9",
+            banglaName = "চ্যানেল নাইন",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://www.channelninebd.tv",
+            rssUrl = null,
+            tagline = "বিনোদন ও খেলার রঙিন ভুবন",
+            primaryColorHex = 0xFF1D4ED8
+        ),
+        Newspaper(
+            id = "asian_tv",
+            name = "Asian TV",
+            banglaName = "এশিয়ান টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://asiantvbd.tv",
+            rssUrl = null,
+            tagline = "সবার জন্য এশিয়ান টিভি",
+            primaryColorHex = 0xFFEA580C
+        ),
+        Newspaper(
+            id = "bangla_tv",
+            name = "Bangla TV",
+            banglaName = "বাংলা টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://banglatv.tv",
+            rssUrl = null,
+            tagline = "বিশ্বজুড়ে বাংলা ভাষাভাষীদের মুখপত্র",
+            primaryColorHex = 0xFF7C3AED
+        ),
+        Newspaper(
+            id = "duronto_tv",
+            name = "Duronto TV",
+            banglaName = "দুরন্ত টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://duronto.tv",
+            rssUrl = null,
+            tagline = "শিশুদের প্রথম শিক্ষামূলক স্যাটেলাইট চ্যানেল",
+            primaryColorHex = 0xFFF59E0B
+        ),
+        Newspaper(
+            id = "nagorik_tv",
+            name = "Nagorik TV",
+            banglaName = "নাগরিক টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://nagorik.com",
+            rssUrl = null,
+            tagline = "আমরা নাগরিক",
+            primaryColorHex = 0xFF059669
+        ),
+        Newspaper(
+            id = "ananda_tv",
+            name = "Ananda TV",
+            banglaName = "আনন্দ টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://anandatv.tv",
+            rssUrl = null,
+            tagline = "সবার আনন্দে আনন্দ টিভি",
+            primaryColorHex = 0xFFDB2777
+        ),
+        Newspaper(
+            id = "nexus_tv",
+            name = "Nexus TV",
+            banglaName = "নেক্সাস টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://nexustv.com.bd",
+            rssUrl = null,
+            tagline = "দেশের প্রথম নন-ফিকশন ও লাইফস্টাইল চ্যানেল",
+            primaryColorHex = 0xFF2563EB
+        ),
+        Newspaper(
+            id = "global_tv_bd",
+            name = "Global TV",
+            banglaName = "গ্লোবাল টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://globaltvbd.com",
+            rssUrl = null,
+            tagline = "সংবাদ ও সমসাময়িক বিষয়ের নির্ভরযোগ্য প্রতিচ্ছবি",
+            primaryColorHex = 0xFF0284C7
+        ),
+        Newspaper(
+            id = "green_tv",
+            name = "Green TV",
+            banglaName = "গ্রিন টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://greentvbd.com",
+            rssUrl = null,
+            tagline = "সবুজের সমারোহে সত্যের বার্তা",
+            primaryColorHex = 0xFF16A34A
+        ),
+        Newspaper(
+            id = "islamic_tv",
+            name = "Islamic TV",
+            banglaName = "ইসলামিক টিভি",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://islamictv.com.bd",
+            rssUrl = null,
+            tagline = "ইসলামী আদর্শ, মূল্যবোধ ও শিক্ষা সম্প্রচার",
+            primaryColorHex = 0xFF065F46
+        ),
+        Newspaper(
+            id = "star_news_bd",
+            name = "Star News",
+            banglaName = "স্টার নিউজ",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://starnews.com.bd",
+            rssUrl = null,
+            tagline = "তাজা খবরের বিশ্বাসযোগ্য ঠিকানা",
+            primaryColorHex = 0xFFDC2626
+        ),
+        Newspaper(
+            id = "channel_1_bd",
+            name = "Channel 1",
+            banglaName = "চ্যানেল ওয়ান",
+            category = NewspaperCategory.TV_NEWS,
+            websiteUrl = "https://channel1.tv",
+            rssUrl = null,
+            tagline = "সংবাদ ও বিনোদনের অগ্রদূত",
+            primaryColorHex = 0xFF4338CA
         )
     )
 
