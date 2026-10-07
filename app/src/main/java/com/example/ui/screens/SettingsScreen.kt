@@ -46,6 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,6 +87,10 @@ fun SettingsScreen(
     var showTermsDialog by remember { mutableStateOf(false) }
     var showCopyrightDialog by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshCacheSize()
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         CenterAlignedTopAppBar(

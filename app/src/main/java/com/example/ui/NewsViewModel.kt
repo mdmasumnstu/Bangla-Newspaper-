@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.entity.ArticleEntity
+import com.example.data.model.InitialNewsData
 import com.example.data.model.Newspaper
 import com.example.data.model.NewspaperCategory
 import com.example.data.model.NewspaperDataSource
@@ -76,21 +77,37 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
     // Screen navigation history for Android back button
     private val navBackStack = mutableListOf<ScreenDestination>()
 
-    // Data streams
+    // Data streams (pre-seeded with initial articles for instantaneous, zero-delay cold start)
     val breakingNews: StateFlow<List<ArticleEntity>> = repository.breakingNews
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            InitialNewsData.seedArticles.filter { it.isBreaking }
+        )
 
     val topNews: StateFlow<List<ArticleEntity>> = repository.topNews
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            InitialNewsData.seedArticles.filter { it.isTopNews }
+        )
 
     val allArticles: StateFlow<List<ArticleEntity>> = repository.allArticles
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            InitialNewsData.seedArticles
+        )
 
     val savedArticles: StateFlow<List<ArticleEntity>> = repository.savedArticles
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val favoriteNewspaperIds: StateFlow<List<String>> = repository.favoriteNewspaperIds
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            listOf("prothom_alo", "the_daily_star")
+        )
 
     // Filter & Search
     private val _sourcesCategoryFilter = MutableStateFlow(NewspaperCategory.ALL)
@@ -249,14 +266,22 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
     val cacheSizeFormatted: StateFlow<String> = _cacheSizeFormatted.asStateFlow()
 
     init {
-        viewModelScope.launch {
+        // Asynchronous database initialization offloaded to background IO dispatcher
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             repository.initializeData(getApplication())
-            // Calculate cache size & auto-trim if excessive
+        }
+
+        // Postpone heavy cache traversal and pruning until well after app launch so UI is instantaneous
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            kotlinx.coroutines.delay(10_000)
             refreshCacheSize()
             com.example.util.CacheManager.autoTrimIfNeeded(getApplication())
             refreshCacheSize()
-            // Delay background network refresh slightly so initial app launch is instantaneous
-            kotlinx.coroutines.delay(2500)
+        }
+
+        // Delay background network refresh slightly so initial app launch is completely lightweight
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(3500)
             refreshNewsSilent()
         }
 

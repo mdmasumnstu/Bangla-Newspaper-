@@ -44,6 +44,8 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -159,152 +161,162 @@ fun HomeScreen(
             )
         )
 
-        // News Feed
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        // News Feed with Pull-To-Refresh
+        val pullRefreshState = rememberPullToRefreshState()
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.refreshNews() },
+            state = pullRefreshState,
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("home_pull_to_refresh_box")
         ) {
-            // Breaking News Banner
-            if (breakingNews.isNotEmpty()) {
-                item {
-                    BreakingNewsBanner(
-                        breakingArticles = breakingNews,
-                        onClick = { onOpenArticle(it) }
-                    )
-                }
-            }
-
-            // Top News Carousel
-            if (topNews.isNotEmpty()) {
-                item {
-                    Column {
-                        Text(
-                            text = strings.topNews,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 10.dp)
-                        )
-                        TopNewsCarousel(
-                            articles = topNews,
-                            onArticleClick = { onOpenArticle(it) }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Breaking News Banner
+                if (breakingNews.isNotEmpty()) {
+                    item {
+                        BreakingNewsBanner(
+                            breakingArticles = breakingNews,
+                            onClick = { onOpenArticle(it) }
                         )
                     }
                 }
-            }
 
-            // Featured Bangladeshi Newspapers Grid
-            item {
-                Column {
+                // Top News Carousel
+                if (topNews.isNotEmpty()) {
+                    item {
+                        Column {
+                            Text(
+                                text = strings.topNews,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(bottom = 10.dp)
+                            )
+                            TopNewsCarousel(
+                                articles = topNews,
+                                onArticleClick = { onOpenArticle(it) }
+                            )
+                        }
+                    }
+                }
+
+                // Featured Bangladeshi Newspapers Grid
+                item {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = strings.sources,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            TextButton(onClick = onSeeAllNews) {
+                                Text(
+                                    text = "${strings.seeAll} (${NewspaperDataSource.allNewspapers.size}+)",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        val topNewspapers = remember(favoriteIds) {
+                            val ids = listOf("prothom_alo", "the_daily_star", "ittefaq", "bdnews24", "kaler_kantho", "somokal")
+                            ids.mapNotNull { id ->
+                                NewspaperDataSource.getById(id)?.copy(isFavorite = favoriteIds.contains(id))
+                            }
+                        }
+
+                        topNewspapers.chunked(3).forEach { rowPapers ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rowPapers.forEach { newspaper ->
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        NewspaperGridCard(
+                                            newspaper = newspaper,
+                                            onClick = { onOpenNewspaper(newspaper.id) },
+                                            onToggleFavorite = {
+                                                viewModel.toggleFavoriteNewspaper(newspaper.id)
+                                            }
+                                        )
+                                    }
+                                }
+                                repeat(3 - rowPapers.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Latest News Section Header
+                item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = strings.sources,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        TextButton(onClick = onSeeAllNews) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "${strings.seeAll} (${NewspaperDataSource.allNewspapers.size}+)",
+                                text = strings.latestNews,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ) {
+                                Text(
+                                    text = "${latestArticles.size}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        TextButton(onClick = onSeeAllNews, modifier = Modifier.testTag("see_all_news_btn")) {
+                            Text(
+                                text = strings.seeAll,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
+                                fontSize = 14.sp
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    val topNewspapers = remember(favoriteIds) {
-                        val ids = listOf("prothom_alo", "the_daily_star", "ittefaq", "bdnews24", "kaler_kantho", "somokal")
-                        ids.mapNotNull { id ->
-                            NewspaperDataSource.getById(id)?.copy(isFavorite = favoriteIds.contains(id))
-                        }
-                    }
-
-                    topNewspapers.chunked(3).forEach { rowPapers ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            rowPapers.forEach { newspaper ->
-                                Box(modifier = Modifier.weight(1f)) {
-                                    NewspaperGridCard(
-                                        newspaper = newspaper,
-                                        onClick = { onOpenNewspaper(newspaper.id) },
-                                        onToggleFavorite = {
-                                            viewModel.toggleFavoriteNewspaper(newspaper.id)
-                                        }
-                                    )
-                                }
-                            }
-                            repeat(3 - rowPapers.size) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                    }
                 }
-            }
 
-            // Latest News Section Header
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = strings.latestNews,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ) {
-                            Text(
-                                text = "${latestArticles.size}",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-
-                    TextButton(onClick = onSeeAllNews, modifier = Modifier.testTag("see_all_news_btn")) {
-                        Text(
-                            text = strings.seeAll,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
-                        )
-                    }
+                // Latest News Feed
+                items(latestArticles, key = { it.id }) { article ->
+                    ArticleCard(
+                        article = article,
+                        onClick = { onOpenArticle(article.id) },
+                        onToggleSave = { viewModel.toggleSaveArticle(article) }
+                    )
                 }
-            }
 
-            // Latest News Feed
-            items(latestArticles, key = { it.id }) { article ->
-                ArticleCard(
-                    article = article,
-                    onClick = { onOpenArticle(article.id) },
-                    onToggleSave = { viewModel.toggleSaveArticle(article) }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
         }
     }
