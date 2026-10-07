@@ -1491,7 +1491,7 @@ object NewspaperDataSource {
             name = "Channel S UK",
             banglaName = "চ্যানেল এস ইউকে",
             category = NewspaperCategory.TV_NEWS,
-            websiteUrl = "https://channelsuk.tv",
+            websiteUrl = "https://chsuk.tv",
             rssUrl = null,
             tagline = "ভয়েস অব দ্য ব্রিটিশ বাংলাদেশি",
             primaryColorHex = 0xFFBE185D

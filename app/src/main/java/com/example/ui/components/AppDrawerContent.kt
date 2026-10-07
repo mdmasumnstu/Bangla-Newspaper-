@@ -236,16 +236,20 @@ fun AppDrawerContent(
             val categories = listOf(
                 NewspaperCategory.BENGALI to Icons.Filled.Newspaper,
                 NewspaperCategory.ONLINE to Icons.Filled.Public,
-                NewspaperCategory.LOCAL to Icons.Filled.LocationOn,
+                NewspaperCategory.TV_NEWS to Icons.Filled.Tv,
+                NewspaperCategory.EDUCATION to Icons.Filled.Public,
+                NewspaperCategory.SPORTS to Icons.Filled.SportsSoccer,
+                NewspaperCategory.BUSINESS to Icons.Filled.Business,
+                NewspaperCategory.ENGLISH to Icons.Filled.Language,
+                NewspaperCategory.INTERNATIONAL to Icons.Filled.Public,
                 NewspaperCategory.JOBS to Icons.Filled.Business,
-                NewspaperCategory.RADIO to Icons.Filled.Tv,
                 NewspaperCategory.GOVERNMENT to Icons.Filled.Public,
                 NewspaperCategory.STOCK_MARKET to Icons.Filled.Business,
-                NewspaperCategory.MAGAZINE to Icons.Filled.Newspaper,
+                NewspaperCategory.AGENCIES to Icons.Filled.Newspaper,
                 NewspaperCategory.TECH to Icons.Filled.Public,
-                NewspaperCategory.TV_NEWS to Icons.Filled.Tv,
-                NewspaperCategory.SPORTS to Icons.Filled.SportsSoccer,
-                NewspaperCategory.ENGLISH to Icons.Filled.Language
+                NewspaperCategory.MAGAZINE to Icons.Filled.Newspaper,
+                NewspaperCategory.RADIO to Icons.Filled.Tv,
+                NewspaperCategory.LOCAL to Icons.Filled.LocationOn
             )
 
             categories.forEach { (cat, icon) ->

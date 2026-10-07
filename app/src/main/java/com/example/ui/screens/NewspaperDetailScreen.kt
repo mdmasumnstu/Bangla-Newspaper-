@@ -786,7 +786,10 @@ fun NewspaperDetailScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            webViewInstance?.destroy()
+            try {
+                webViewInstance?.clearCache(false) // clear RAM cache and prune disk cache entries
+                webViewInstance?.destroy()
+            } catch (_: Exception) {}
         }
     }
 }

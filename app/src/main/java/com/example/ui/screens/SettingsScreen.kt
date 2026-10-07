@@ -77,6 +77,7 @@ fun SettingsScreen(
     val currentTheme by viewModel.themeMode.collectAsStateWithLifecycle()
     val language by viewModel.selectedLanguage.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val cacheSize by viewModel.cacheSizeFormatted.collectAsStateWithLifecycle()
 
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -256,8 +257,8 @@ fun SettingsScreen(
             // Clear Cache
             SettingsItemRow(
                 icon = Icons.Filled.Delete,
-                title = "Clear Offline Cache",
-                subtitle = "Free space and reset news cache",
+                title = if (isBn) "ক্যাশ ডাটা ও স্টোরেজ মুছুন" else "Clear Cache & Free Storage",
+                subtitle = if (isBn) "ক্যাশ সাইজ: $cacheSize • ক্যাশ মুছে ফোন হালকা করুন" else "Cache size: $cacheSize • Free storage & reset cache",
                 onClick = { viewModel.clearCache() },
                 tag = "setting_clear_cache"
             )

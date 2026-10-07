@@ -1,23 +1,29 @@
 package com.example.data.model
 
+/**
+ * Category classification for Newspapers, Media, and Portals.
+ * Serial order: All -> Bengali -> Online -> TV News -> Education -> Sports -> Business ->
+ * English -> International -> Jobs -> Govt Portal -> Stock Market -> News Agencies ->
+ * Tech Sites -> Magazines -> FM Radio -> Local.
+ */
 enum class NewspaperCategory(val displayName: String, val banglaName: String, val emoji: String) {
     ALL("All", "সব", "📰"),
     BENGALI("Bengali", "বাংলা", "🇧🇩"),
     ONLINE("Online", "অনলাইন", "🌐"),
-    LOCAL("Local", "স্থানীয়", "📍"),
+    TV_NEWS("TV News", "টিভি নিউজ", "📺"),
+    EDUCATION("Education", "শিক্ষা", "🎓"),
+    SPORTS("Sports", "খেলা", "🏏"),
+    BUSINESS("Business", "বাণিজ্য", "📊"),
+    ENGLISH("English", "ইংরেজি", "🇬🇧"),
+    INTERNATIONAL("International", "আন্তর্জাতিক", "🌎"),
     JOBS("Jobs", "চাকরি", "💼"),
-    RADIO("FM Radio", "রেডিও", "📻"),
     GOVERNMENT("Govt Portal", "সরকারি সেবা", "🏛️"),
     STOCK_MARKET("Stock Market", "শেয়ার বাজার", "📈"),
-    MAGAZINE("Magazines", "ম্যাগাজিন", "📖"),
-    TECH("Tech Sites", "প্রযুক্তি", "💻"),
-    TV_NEWS("TV News", "টিভি নিউজ", "📺"),
-    BUSINESS("Business", "বাণিজ্য", "📊"),
-    SPORTS("Sports", "খেলা", "🏏"),
-    EDUCATION("Education", "শিক্ষা", "🎓"),
-    ENGLISH("English", "ইংরেজি", "🇬🇧"),
     AGENCIES("News Agencies", "সংবাদ সংস্থা", "📰"),
-    INTERNATIONAL("International", "আন্তর্জাতিক", "🌎");
+    TECH("Tech Sites", "প্রযুক্তি", "💻"),
+    MAGAZINE("Magazines", "ম্যাগাজিন", "📖"),
+    RADIO("FM Radio", "রেডিও", "📻"),
+    LOCAL("Local", "স্থানীয়", "📍");
 
     companion object {
         fun fromId(id: String): NewspaperCategory {

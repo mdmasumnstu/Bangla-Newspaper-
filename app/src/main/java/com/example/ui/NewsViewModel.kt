@@ -244,9 +244,17 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
         prefs.getBoolean("notifications_enabled", true)
     )
 
+    // Storage and Cache State
+    private val _cacheSizeFormatted = MutableStateFlow("Calculating...")
+    val cacheSizeFormatted: StateFlow<String> = _cacheSizeFormatted.asStateFlow()
+
     init {
         viewModelScope.launch {
             repository.initializeData(getApplication())
+            // Calculate cache size & auto-trim if excessive
+            refreshCacheSize()
+            com.example.util.CacheManager.autoTrimIfNeeded(getApplication())
+            refreshCacheSize()
             // Delay background network refresh slightly so initial app launch is instantaneous
             kotlinx.coroutines.delay(2500)
             refreshNewsSilent()
@@ -494,13 +502,22 @@ class NewsViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().remove("recent_searches_list").apply()
     }
 
+    fun refreshCacheSize() {
+        viewModelScope.launch {
+            val bytes = com.example.util.CacheManager.calculateCacheSizeBytes(getApplication())
+            _cacheSizeFormatted.value = com.example.util.CacheManager.formatBytes(bytes)
+        }
+    }
+
     fun clearCache() {
         viewModelScope.launch {
             repository.clearCache()
+            com.example.util.CacheManager.clearAllCache(getApplication())
+            refreshCacheSize()
             val isBn = selectedLanguage.value.contains("বাংলা") || selectedLanguage.value.equals("Bangla", ignoreCase = true)
             _snackbarMessage.emit(
-                if (isBn) "অফলাইন ক্যাশ সম্পূর্ণ মোছা হয়েছে এবং নতুন ডাটা লোড হয়েছে!"
-                else "Offline cache cleared and reset!"
+                if (isBn) "অ্যাপ ক্যাশ ও মেমরি সম্পূর্ণ খালি করা হয়েছে! (স্টোরেজ মুক্ত হয়েছে)"
+                else "App cache & memory completely cleared! (Storage freed)"
             )
         }
     }
